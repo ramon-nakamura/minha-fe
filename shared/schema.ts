@@ -7,6 +7,9 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // 'prayer', 'grace', 'sin'
   content: text("content").notNull(), // nullable for anonymous
+
+  authorId: varchar("author_id"), // ← ADICIONADO
+
   likesCount: integer("likes_count").default(0).notNull(),
   isPardoned: boolean("is_pardoned").default(false).notNull(),
   isSpecial: boolean("is_special").default(false).notNull(),
