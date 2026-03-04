@@ -48,9 +48,11 @@ export async function registerRoutes(
   app.post(api.messages.create.path, isAuthenticated, async (req: any, res) => {
     try {
       const input = api.messages.create.input.parse(req.body);
+      const userId = req.session?.userId;
 
       const msg = await storage.createMessage({
         ...input,
+        authorId: userId,
       });
 
       res.status(201).json(msg);
