@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Outfit', sans-serif;
+    --font-display: 'Playfair Display', serif;
+
+    /* Heavenly Light Theme */
+    --background: 210 40% 98%; /* Soft heaven blue/white */
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    --primary: 38 92% 50%; /* Divine Gold/Amber */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 38 92% 50%;
+
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: var(--font-sans);
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(280, 100%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(40, 100%, 90%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(200, 100%, 95%, 1) 0px, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
+  }
+  
+  .glass-panel-hover {
+    @apply transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(38,146,255,0.12)] hover:bg-white/60 hover:border-white;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+
+  @keyframes border-rotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .special-border-animate {
+    @apply rounded-[2rem];
+  }
+  
+  .masonry-grid {
+    display: block;
+    column-count: 1;
+    column-gap: 2.5rem;
+    width: 100%;
+  }
+  
+  @screen sm {
+    .masonry-grid {
+      column-count: 2;
+    }
+  }
+  
+  @screen lg {
+    .masonry-grid {
+      column-count: 3;
+    }
+  }
+  
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 2.5rem;
+  }
+}
