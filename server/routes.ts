@@ -18,7 +18,7 @@ export async function registerRoutes(
 
   app.get(api.messages.list.path, async (req, res) => {
     try {
-      const type = req.query.type as string | undefined;
+      const type = req.query.type as string as string | undefined;
       const authorId = req.query.authorId as string | undefined;
       const msgs = await storage.getMessages(type, authorId);
       
@@ -46,7 +46,6 @@ export async function registerRoutes(
       
       const msg = await storage.createMessage({
         ...input,
-        authorId: input.type === 'sin' ? null : userId,
       });
       res.status(201).json(msg);
     } catch (err) {

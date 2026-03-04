@@ -18,7 +18,6 @@ export const messageResponseSchema = z.object({
   id: z.number(),
   type: z.string(),
   content: z.string(),
-  authorId: z.string().nullable(),
   likesCount: z.number(),
   isPardoned: z.boolean(),
   isSpecial: z.boolean(),

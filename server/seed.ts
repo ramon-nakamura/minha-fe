@@ -94,19 +94,18 @@ export async function seedDatabase() {
         const user = seedUsers[Math.floor(Math.random() * seedUsers.length)];
         await storage.createMessage({ 
           type: 'prayer', 
-          content: p, 
-          authorId: user.id,
+          content: p,
           isSpecial: i < 3
         });
       }
 
       for (const g of graces) {
         const user = seedUsers[Math.floor(Math.random() * seedUsers.length)];
-        await storage.createMessage({ type: 'grace', content: g, authorId: user.id });
+        await storage.createMessage({ type: 'grace', content: g});
       }
 
       for (const s of sins) {
-        await storage.createMessage({ type: 'sin', content: s, authorId: null });
+        await storage.createMessage({ type: 'sin', content: s});
       }
       console.log("Database seeded with more realistic data");
     }

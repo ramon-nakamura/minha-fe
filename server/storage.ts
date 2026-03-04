@@ -85,7 +85,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async anonymizeUserMessages(userId: string): Promise<void> {
-    await db.update(messages).set({ authorId: null }).where(eq(messages.authorId, userId));
+    await db.update(messages).set({}).where(eq(messages.authorId, userId));
   }
 
   async createPayment(data: { userId: string; messageId: number | null; stripeSessionId: string; amount: number; status?: string }): Promise<Payment> {

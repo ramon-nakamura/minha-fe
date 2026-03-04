@@ -6,8 +6,7 @@ export * from "./models/auth";
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // 'prayer', 'grace', 'sin'
-  content: text("content").notNull(),
-  authorId: varchar("author_id"), // nullable for anonymous
+  content: text("content").notNull(), // nullable for anonymous
   likesCount: integer("likes_count").default(0).notNull(),
   isPardoned: boolean("is_pardoned").default(false).notNull(),
   isSpecial: boolean("is_special").default(false).notNull(),
@@ -18,8 +17,7 @@ export const messages = pgTable("messages", {
 export const insertMessageSchema = createInsertSchema(messages).extend({
   content: z.string().min(1, "A mensagem não pode estar vazia").max(400, "A mensagem deve ter no máximo 400 caracteres")
 }).omit({ 
-  id: true, 
-  authorId: true,
+  id: true,
   likesCount: true,
   isPardoned: true,
   isSpecial: true,
