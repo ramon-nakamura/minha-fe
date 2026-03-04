@@ -7,7 +7,6 @@ export interface FaithMessage {
   id: number;
   type: MessageType;
   content: string;
-  authorId: string | null;
   likesCount: number;
   isPardoned: boolean;
   isSpecial: boolean;
