@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -177,6 +177,84 @@ export async function registerRoutes(
     } catch {
       res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // ── Stripe: criar sessão de checkout ──────────────────────────────
+  app.post("/api/payments/create-checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session?.userId;
+      const { messageId } = req.body;
+
+      const origin = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: SPECIAL_CANDLE_CURRENCY,
+              product_data: { name: "Vela Especial", description: "Destaque sua mensagem com uma vela especial" },
+              unit_amount: SPECIAL_CANDLE_PRICE,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${origin}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/?payment=cancelled`,
+        metadata: { userId, messageId: String(messageId ?? "") },
+      });
+
+      await storage.createPayment({
+        userId,
+        messageId: messageId ?? null,
+        stripeSessionId: session.id,
+        amount: SPECIAL_CANDLE_PRICE,
+        status: "pending",
+      });
+
+      res.json({ url: session.url });
+    } catch (err) {
+      console.error("Stripe checkout error:", err);
+      res.status(500).json({ message: "Erro ao criar sessão de pagamento" });
+    }
+  });
+
+  // ── Stripe: webhook ───────────────────────────────────────────────
+  app.post("/api/payments/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+    const sig = req.headers["stripe-signature"] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    let event: any;
+    try {
+      if (webhookSecret) {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      } else {
+        event = JSON.parse(req.body.toString());
+      }
+    } catch (err) {
+      console.error("Webhook signature error:", err);
+      return res.status(400).send("Webhook Error");
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as any;
+      const { messageId } = session.metadata;
+
+      try {
+        const payment = await storage.getPaymentBySessionId(session.id);
+        if (payment) {
+          await storage.updatePaymentStatus(payment.id, "completed");
+        }
+        if (messageId) {
+          await storage.updateMessage(parseInt(messageId), { isSpecial: true });
+        }
+      } catch (err) {
+        console.error("Webhook processing error:", err);
+      }
+    }
+
+    res.json({ received: true });
   });
 
   await seedDatabase();
