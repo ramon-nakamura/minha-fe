@@ -179,7 +179,31 @@ export async function registerRoutes(
     }
   });
 
-  // ── Stripe: criar sessão de checkout ──────────────────────────────
+  // ── Admin: estatísticas ───────────────────────────────────────────
+  app.get("/api/admin/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session?.userId;
+      const dbUser = await authStorage.getUser(userId);
+      if (!dbUser || dbUser.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const allMessages = await storage.getAllMessages();
+      const allUsers = await authStorage.getAllUsers();
+
+      res.json({
+        totalUsers: allUsers.length,
+        totalPrayers: allMessages.filter(m => m.type === "prayer").length,
+        totalGraces: allMessages.filter(m => m.type === "grace").length,
+        totalSins: allMessages.filter(m => m.type === "sin").length,
+        totalSpecial: allMessages.filter(m => m.isSpecial).length,
+      });
+    } catch {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+
   app.post("/api/payments/create-checkout", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.session?.userId;
