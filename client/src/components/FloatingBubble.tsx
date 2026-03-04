@@ -95,12 +95,46 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
         transition={{ duration: 0.6, delay: index * 0.1 }}
         className={cn(
           "rounded-[2rem] p-6 relative group overflow-hidden transition-all duration-500 shadow-sm",
-          "glass-panel glass-panel-hover border border-white/60"
+          isSpecial
+            ? "border-0"
+            : "glass-panel glass-panel-hover border border-white/60"
         )}
       >
+        {/* Borda animada dourada para cards especiais */}
+        {isSpecial && (
+          <>
+            <div
+              className="absolute inset-0 rounded-[2rem] z-0 pointer-events-none"
+              style={{
+                padding: "1.5px",
+                background: "linear-gradient(var(--angle, 0deg), #f5e27a, #c8973a, #f0d060, #a87830, #f5e27a)",
+                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                maskComposite: "exclude",
+                animation: "spin-border 3s linear infinite",
+              }}
+            />
+            <div
+              className="absolute inset-[1.5px] rounded-[calc(2rem-1.5px)] z-0 pointer-events-none"
+              style={{ background: "linear-gradient(135deg, #fffdf5 0%, #fdf8e8 50%, #fffef7 100%)" }}
+            />
+            <style>{`
+              @property --angle {
+                syntax: '<angle>';
+                initial-value: 0deg;
+                inherits: false;
+              }
+              @keyframes spin-border {
+                to { --angle: 360deg; }
+              }
+            `}</style>
+          </>
+        )}
+
         <div className={cn(
           "absolute -top-10 -right-10 w-32 h-32 blur-3xl opacity-30 rounded-full pointer-events-none transition-all duration-700 group-hover:opacity-60",
-          isPrayer && "bg-amber-400",
+          isPrayer && !isSpecial && "bg-amber-400",
+          isPrayer && isSpecial && "bg-yellow-300 opacity-40",
           isGrace && "bg-blue-400",
           isSin && "bg-slate-400"
         )} />
