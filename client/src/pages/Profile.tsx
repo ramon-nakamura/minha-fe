@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
 import { Lock, Unlock, KeyRound, Eye, EyeOff as EyeOffIcon, AlertTriangle } from "lucide-react";
-import { Loader2, ArrowLeft, Trash2, CheckSquare, Square, CheckCircle2, Heart, Camera, Save, User, HandHeart, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Trash2, CheckSquare, Square, CheckCircle2, Heart, Camera, Save, User, HandHeart, EyeOff, Star, HandHelping } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -480,32 +480,22 @@ export default function Profile() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          {msg.isPrivate ? (
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-tighter">
-                              <Lock className="w-3 h-3" />
-                              Privada
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-tighter">
-                              <Unlock className="w-3 h-3" />
-                              Pública
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                           <button 
-                            onClick={(e) => { e.stopPropagation(); handleDelete(msg.id); }}
-                            className="p-2 rounded-xl text-muted-foreground/30 hover:text-destructive hover:bg-destructive/5 transition-all opacity-0 group-hover:opacity-100"
+                            onClick={() => handleDelete(msg.id)}
+                            className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95"
+                            title="Excluir"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
-                      <p className="text-foreground/80 mb-5 font-medium leading-relaxed">{msg.content}</p>
+                      <p className="text-foreground leading-relaxed font-medium mb-4">{msg.content}</p>
 
-                      <div className="flex items-center gap-5">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 text-xs font-bold text-muted-foreground border border-black/5">
-                          <Heart className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? 'fill-primary text-primary' : ''}`} />
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100/50 text-slate-600 font-bold text-[10px] flex items-center gap-1">
+                          <Heart className="w-3 h-3 fill-current" />
                           <span>{msg.likesCount} {msg.likesCount === 1 ? 'interação' : 'interações'}</span>
                         </div>
                         {msg.type === 'sin' && (
@@ -536,6 +526,55 @@ export default function Profile() {
                 </Link>
               </div>
             )}
+
+            {/* Guia da Comunidade */}
+            <div className="mt-12 pt-12 border-t border-black/5">
+              <h3 className="text-sm font-bold text-foreground/60 uppercase tracking-widest mb-8 font-sans">
+                Guia da Comunidade
+              </h3>
+              
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                    <HandHelping className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-foreground mb-2">Orações</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Compartilhe seus pedidos e intenções. A comunidade pode se unir a você em oração clicando no ícone de mãos postas.
+                  </p>
+                </div>
+
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                    <Star className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-foreground mb-2">Orações Especiais</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Destaque sua intenção com uma Vela Especial. Elas aparecem com um brilho dourado e permanecem em evidência no topo.
+                  </p>
+                </div>
+
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                    <Heart className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-foreground mb-2">Graças Alcançadas</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Testemunhe as vitórias e bênçãos recebidas para inspirar e fortalecer a fé de todos os irmãos.
+                  </p>
+                </div>
+
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-white shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 mb-4 group-hover:bg-slate-800 group-hover:text-white transition-colors">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-foreground mb-2">Confissões</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Um espaço anônimo para aliviar o coração. Suas confissões são privadas e outros podem oferecer o perdão simbólico.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
