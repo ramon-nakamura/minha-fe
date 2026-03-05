@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { LogOut, Plus, Loader2, User, Bell, Shield } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { LogOut, Plus, Loader2, User, Bell, Shield, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, type MessageType } from "@/hooks/use-messages";
 import { InspiringMessage } from "@/components/InspiringMessage";
@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Dashboard() {
   const { user, logout, isAdmin } = useAuth();
   const [filter, setFilter] = useState<MessageType | 'all'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -38,6 +40,19 @@ export default function Dashboard() {
   
   const { data: messages, isLoading } = useMessages({ type: filter });
 
+  const sortedMessages = useMemo(() => {
+    if (!messages) return [];
+    
+    return [...messages].sort((a, b) => {
+      if (sortBy === 'popular') {
+        if (b.likesCount !== a.likesCount) {
+          return b.likesCount - a.likesCount;
+        }
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [messages, sortBy]);
+
   const { data: notifications } = useQuery<any[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000, // Refresh every 30s
@@ -55,9 +70,9 @@ export default function Dashboard() {
   const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
 
   const filters = [
-    { id: 'all', label: 'Tudo' },
+    { id: 'all', label: 'Todas as mensagens' },
     { id: 'prayer', label: 'Orações' },
-    { id: 'grace', label: 'Graças' },
+    { id: 'grace', label: 'Graças alcançadas' },
     { id: 'sin', label: 'Confissões' },
   ] as const;
 
@@ -147,21 +162,42 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <InspiringMessage />
 
-        {/* Filter Controls */}
-        <div className="flex items-center justify-center gap-2 md:gap-4 mb-12 flex-wrap">
-          {filters.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={`px-5 py-2.5 rounded-full font-medium transition-all duration-300 ${
-                filter === f.id 
-                  ? "bg-white text-primary shadow-md border border-white" 
-                  : "bg-white/40 text-muted-foreground hover:bg-white/60 hover:text-foreground border border-transparent"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        {/* Unified Filter & Sort Controls */}
+        <div className="max-w-xl mx-auto mb-12">
+          <div className="bg-white/40 backdrop-blur-md p-2 rounded-[2rem] border border-white/60 shadow-xl shadow-black/5 flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <div className="flex-1 w-full flex items-center gap-3 pl-4 pr-2 py-2">
+              <Filter className="w-4 h-4 text-primary/60" />
+              <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-8 text-sm font-bold text-slate-700">
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
+                  {filters.map(f => (
+                    <SelectItem key={f.id} value={f.id} className="rounded-xl py-2.5">
+                      {f.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="hidden sm:block w-px h-8 bg-black/5" />
+
+            <div className="flex-1 w-full flex items-center gap-3 pl-4 sm:pl-0 pr-2 py-2">
+              <div className="sm:hidden flex items-center gap-3">
+                <Filter className="w-4 h-4 text-amber-500/60" />
+              </div>
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-8 text-sm font-bold text-slate-700">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
+                  <SelectItem value="newest" className="rounded-xl py-2.5">Mais novos</SelectItem>
+                  <SelectItem value="popular" className="rounded-xl py-2.5">Mais interações</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         {/* Messages Grid */}
@@ -170,9 +206,9 @@ export default function Dashboard() {
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
             <p>Sintonizando com o divino...</p>
           </div>
-        ) : messages && messages.length > 0 ? (
+        ) : sortedMessages && sortedMessages.length > 0 ? (
           <div className="masonry-grid">
-            {messages.map((message, idx) => (
+            {sortedMessages.map((message, idx) => (
               <FloatingBubble key={message.id} message={message} index={idx} isAdmin={isAdmin} />
             ))}
           </div>
@@ -182,7 +218,7 @@ export default function Dashboard() {
               <span className="text-3xl opacity-50">🕊️</span>
             </div>
             <h3 className="text-2xl font-display font-semibold mb-2">O céu está silencioso</h3>
-            <p className="text-muted-foreground">Seja o primeiro a compartilhar uma mensagem de fé.</p>
+            <p className="text-muted-foreground">Seja o primeiro a compartilhar uma message de fé.</p>
           </div>
         )}
       </main>
