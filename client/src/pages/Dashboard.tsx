@@ -163,17 +163,17 @@ export default function Dashboard() {
         <InspiringMessage />
 
         {/* Unified Filter & Sort Controls */}
-        <div className="max-w-xl mx-auto mb-12">
-          <div className="bg-white/40 backdrop-blur-md p-2 rounded-[2rem] border border-white/60 shadow-xl shadow-black/5 flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-            <div className="flex-1 w-full flex items-center gap-3 pl-4 pr-2 py-2">
-              <Filter className="w-4 h-4 text-primary/60" />
+        <div className="max-w-2xl mx-auto mb-12 px-2">
+          <div className="bg-white/40 backdrop-blur-md p-1.5 rounded-full border border-white/60 shadow-xl shadow-black/5 flex items-center gap-1">
+            <div className="flex-[1.5] flex items-center gap-2 pl-4 pr-1 py-1 min-w-0">
+              <Filter className="w-3.5 h-3.5 text-primary/60 shrink-0" />
               <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-8 text-sm font-bold text-slate-700">
-                  <SelectValue placeholder="Filtrar por tipo" />
+                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-7 text-xs font-bold text-slate-700 p-0 truncate">
+                  <SelectValue placeholder="Filtrar" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
                   {filters.map(f => (
-                    <SelectItem key={f.id} value={f.id} className="rounded-xl py-2.5">
+                    <SelectItem key={f.id} value={f.id} className="rounded-xl py-2 text-xs">
                       {f.label}
                     </SelectItem>
                   ))}
@@ -181,19 +181,16 @@ export default function Dashboard() {
               </Select>
             </div>
             
-            <div className="hidden sm:block w-px h-8 bg-black/5" />
+            <div className="w-px h-5 bg-black/5 shrink-0" />
 
-            <div className="flex-1 w-full flex items-center gap-3 pl-4 sm:pl-0 pr-2 py-2">
-              <div className="sm:hidden flex items-center gap-3">
-                <Filter className="w-4 h-4 text-amber-500/60" />
-              </div>
+            <div className="flex-1 flex items-center gap-2 pl-2 pr-1 py-1 min-w-0">
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-8 text-sm font-bold text-slate-700">
-                  <SelectValue placeholder="Ordenar por" />
+                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-7 text-xs font-bold text-slate-700 p-0 truncate">
+                  <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
-                  <SelectItem value="newest" className="rounded-xl py-2.5">Mais novos</SelectItem>
-                  <SelectItem value="popular" className="rounded-xl py-2.5">Mais interações</SelectItem>
+                  <SelectItem value="newest" className="rounded-xl py-2 text-xs">Mais recentes</SelectItem>
+                  <SelectItem value="popular" className="rounded-xl py-2 text-xs">Mais interações</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -204,7 +201,7 @@ export default function Dashboard() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
-            <p>Sintonizando com o divino...</p>
+            <p>Recebendo as mensagens...</p>
           </div>
         ) : sortedMessages && sortedMessages.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
