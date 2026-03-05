@@ -416,7 +416,7 @@ export default function Profile() {
             <Quote className="w-8 h-8 text-primary/20" />
           </div>
           <div className="space-y-2 max-w-2xl mx-auto">
-            <p className="text-3xl md:text-5xl font-display text-foreground leading-snug tracking-tight">
+            <p className="text-3xl md:text-5xl text-foreground leading-snug tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
               "{verseOfDay.text}"
             </p>
             <p className="text-sm font-bold uppercase tracking-widest text-primary/60">
