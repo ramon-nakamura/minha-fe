@@ -87,27 +87,7 @@
     @apply rounded-[2rem];
   }
   
-  .masonry-grid {
-    display: block;
-    column-count: 1;
-    column-gap: 2.5rem;
-    width: 100%;
-  }
-  
-  @screen sm {
-    .masonry-grid {
-      column-count: 2;
-    }
-  }
-  
-  @screen lg {
-    .masonry-grid {
-      column-count: 3;
-    }
-  }
-  
   .masonry-item {
-    break-inside: avoid;
     margin-bottom: 2.5rem;
   }
 }
