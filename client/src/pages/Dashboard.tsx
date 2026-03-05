@@ -207,7 +207,7 @@ export default function Dashboard() {
             <p>Sintonizando com o divino...</p>
           </div>
         ) : sortedMessages && sortedMessages.length > 0 ? (
-          <div className="masonry-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedMessages.map((message, idx) => (
               <FloatingBubble key={message.id} message={message} index={idx} isAdmin={isAdmin} />
             ))}
