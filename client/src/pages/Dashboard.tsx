@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { LogOut, Plus, Loader2, User, Bell, Shield, Filter } from "lucide-react";
+import { LogOut, Plus, Loader2, User, Bell, Shield, Filter, Compass } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, type MessageType } from "@/hooks/use-messages";
 import { InspiringMessage } from "@/components/InspiringMessage";
@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -135,25 +136,39 @@ export default function Dashboard() {
               </Link>
             )}
 
-            <Link href="/profile">
-              <button className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-black/5 transition-all duration-300">
-                {user?.profileImageUrl ? (
-                  <img src={user.profileImageUrl} alt="Profile" className="w-8 h-8 rounded-full border border-white shadow-sm" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
-                <span className="text-sm font-medium hidden md:block">Perfil</span>
-              </button>
-            </Link>
-            <button
-              onClick={() => logout()}
-              className="p-2.5 rounded-full hover:bg-black/5 text-muted-foreground hover:text-foreground transition-colors"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-black/5 transition-all duration-300 outline-none">
+                  {user?.profileImageUrl ? (
+                    <img src={user.profileImageUrl} alt="Profile" className="w-8 h-8 rounded-full border border-white shadow-sm" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Compass className="w-4 h-4" />
+                    </div>
+                  )}
+                  <span className="text-sm font-bold hidden md:block">Minha jornada</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 rounded-2xl p-2 shadow-2xl border-none" align="end">
+                <Link href="/profile">
+                  <DropdownMenuItem className="rounded-xl py-3 cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    Minha Jornada
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/account">
+                  <DropdownMenuItem className="rounded-xl py-3 cursor-pointer">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Minha conta
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()} className="rounded-xl py-3 cursor-pointer text-red-500 focus:text-red-500">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
