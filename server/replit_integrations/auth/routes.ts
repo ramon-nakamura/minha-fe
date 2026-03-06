@@ -33,8 +33,8 @@ export function registerAuthRoutes(app: Express): void {
   app.patch("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.session.userId;
-      const { firstName, lastName, profileImageUrl } = req.body;
-      const user = await authStorage.updateUser(userId, { firstName, lastName, profileImageUrl });
+      const { firstName, lastName, profileImageUrl, city } = req.body;
+      const user = await authStorage.updateUser(userId, { firstName, lastName, profileImageUrl, city });
       const { password, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
