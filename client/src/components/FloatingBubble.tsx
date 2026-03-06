@@ -228,7 +228,7 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
             onClick={handleAction}
             disabled={likeMutation.isPending || pardonMutation.isPending || (isSin && message.isPardoned)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 font-medium",
+              "flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 font-medium select-none touch-manipulation min-h-[44px]",
               (isPrayer || isGrace) && (message.likesCount > 0 ? "bg-primary/10 text-primary" : "hover:bg-primary/10 hover:text-primary active:scale-95 text-muted-foreground"),
               isSin && message.isPardoned 
                 ? "bg-green-100 text-green-700 cursor-default" 
@@ -237,20 +237,20 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
           >
             {isPrayer ? (
               <>
-                <HandsPrayerIcon className={cn("w-5 h-5 transition-transform", message.likesCount > 0 && "fill-current text-primary")} />
-                <span className={cn(message.likesCount > 0 && "text-primary font-bold")}>
+                <HandsPrayerIcon className={cn("w-5 h-5 pointer-events-none", message.likesCount > 0 && "fill-current text-primary")} />
+                <span className="pointer-events-none">
                   {message.likesCount > 0 ? `${message.likesCount} orando pela causa` : "Orar"}
                 </span>
               </>
             ) : isGrace ? (
               <>
-                <Heart className={cn("w-5 h-5 transition-transform", message.likesCount > 0 && "fill-current text-primary")} />
-                <span>{message.likesCount > 0 ? message.likesCount : "Amém"}</span>
+                <Heart className={cn("w-5 h-5 pointer-events-none", message.likesCount > 0 && "fill-current text-primary")} />
+                <span className="pointer-events-none">{message.likesCount > 0 ? message.likesCount : "Amém"}</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className={cn("w-5 h-5", message.isPardoned && "fill-current")} />
-                <span>{message.isPardoned ? "Perdoado" : "Perdoar"}</span>
+                <CheckCircle2 className={cn("w-5 h-5 pointer-events-none", message.isPardoned && "fill-current")} />
+                <span className="pointer-events-none">{message.isPardoned ? "Perdoado" : "Perdoar"}</span>
               </>
             )}
           </button>
