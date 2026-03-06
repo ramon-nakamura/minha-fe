@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import LandingPage from "@/pages/LandingPage";
 import Profile from "@/pages/Profile";
+import AccountPage from "@/pages/AccountPage";
 import Admin from "@/pages/Admin";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -38,6 +39,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={Profile} />} />
+      <Route path="/account" component={() => <ProtectedRoute component={AccountPage} />} />
       <Route path="/admin" component={() => <ProtectedRoute component={Admin} />} />
       <Route path="/termos" component={() => <ProtectedRoute component={Terms} />} />
       <Route path="/privacidade" component={() => <ProtectedRoute component={Privacy} />} />
