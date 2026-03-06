@@ -1,235 +1,228 @@
-import { useState, useEffect, useMemo } from "react";
-import { LogOut, Plus, Loader2, User, Bell, Shield, Filter } from "lucide-react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMessages, type MessageType } from "@/hooks/use-messages";
-import { InspiringMessage } from "@/components/InspiringMessage";
-import { FloatingBubble } from "@/components/FloatingBubble";
-import { CreateMessageModal } from "@/components/CreateMessageModal";
+import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, HandHelping, MessageSquare, Flame, CheckCircle2, Ghost, Heart } from "lucide-react";
 import { Link } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { FloatingBubble } from "@/components/FloatingBubble";
 
-export default function Dashboard() {
-  const { user, logout, isAdmin } = useAuth();
-  const [filter, setFilter] = useState<MessageType | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export default function Profile() {
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const { data: messages, isLoading } = useMessages({ authorId: user?.id });
+  const deleteMutation = useDeleteMessage();
+  const deleteBulkMutation = useDeleteMessages();
   const { toast } = useToast();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showReflection, setShowReflection] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get("payment");
-    if (paymentStatus) {
-      if (paymentStatus === "success") {
-        toast({ title: "Pagamento confirmado!", description: "Sua vela especial foi acesa com sucesso." });
-        queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
-      } else if (paymentStatus === "cancelled") {
-        toast({ variant: "destructive", title: "Pagamento cancelado", description: "A oração foi enviada sem a vela especial." });
-      } else if (paymentStatus === "error") {
-        toast({ variant: "destructive", title: "Erro no pagamento", description: "Houve um problema ao processar o pagamento." });
-      }
-      window.history.replaceState({}, "", "/");
+  const verseOfDay = {
+    text: "O Senhor é o meu pastor, nada me faltará.",
+    reference: "Salmos 23:1",
+    reflection: "Este versículo lembra que Deus é aquele que guia, protege e supre. Mesmo em momentos de incerteza, confiar no cuidado divino traz paz ao coração."
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = () => {
+    if (!messages) return;
+    if (selectedIds.length === messages.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(messages.map(m => m.id));
     }
-  }, []);
-  
-  const { data: messages, isLoading } = useMessages({ type: filter });
+  };
 
-  const sortedMessages = useMemo(() => {
-    if (!messages) return [];
-    
-    return [...messages].sort((a, b) => {
-      if (sortBy === 'popular') {
-        if (b.likesCount !== a.likesCount) {
-          return b.likesCount - a.likesCount;
-        }
+  const handleDeleteBulk = async () => {
+    if (!confirm(`Tem certeza que deseja excluir as ${selectedIds.length} mensagens selecionadas?`)) return;
+    deleteBulkMutation.mutate(selectedIds, {
+      onSuccess: () => {
+        toast({ title: "Excluído", description: "Mensagens removidas com sucesso." });
+        setSelectedIds([]);
       }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [messages, sortBy]);
+  };
 
-  const { data: notifications } = useQuery<any[]>({
-    queryKey: ["/api/notifications"],
-    refetchInterval: 30000, // Refresh every 30s
-  });
-
-  const markReadMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/notifications/read");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-    }
-  });
-
-  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
-
-  const filters = [
-    { id: 'all', label: 'Todas as mensagens' },
-    { id: 'prayer', label: 'Orações' },
-    { id: 'grace', label: 'Graças alcançadas' },
-    { id: 'sin', label: 'Confissões' },
-  ] as const;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen relative pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/50 backdrop-blur-xl border-b border-white/20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-amber-300 flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="font-display font-bold text-white text-xl">Fé</span>
-            </div>
-            <span className="font-display font-semibold text-xl tracking-tight hidden sm:block">Minha Fé</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-muted-foreground hidden sm:block">
-              Que a paz esteja com você, {user?.firstName || 'Caminhante'}
-            </span>
-
-            <Popover onOpenChange={(open) => open && unreadCount > 0 && markReadMutation.mutate()}>
-              <PopoverTrigger asChild>
-                <button className="relative p-2 rounded-full hover:bg-black/5 transition-colors">
-                  <Bell className="w-5 h-5 text-muted-foreground" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-0 rounded-2xl overflow-hidden shadow-2xl" align="end">
-                <div className="p-4 border-b bg-primary/5">
-                  <h4 className="font-bold text-sm">Notificações</h4>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications && notifications.length > 0 ? (
-                    notifications.map((n) => (
-                      <div key={n.id} className={`p-4 border-b last:border-0 hover:bg-black/5 transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}>
-                        <p className="text-sm text-foreground/80">{n.content}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ptBR })}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-8 text-center text-muted-foreground">
-                      <p className="text-sm">Nenhuma notificação por enquanto.</p>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {isAdmin && (
-              <Link href="/admin">
-                <button data-testid="link-admin" className="p-2.5 rounded-full hover:bg-amber-50 text-amber-600 transition-colors" title="Painel Admin">
-                  <Shield className="w-5 h-5" />
-                </button>
-              </Link>
-            )}
-
-            <Link href="/profile">
-              <button className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-black/5 transition-all duration-300">
-                {user?.profileImageUrl ? (
-                  <img src={user.profileImageUrl} alt="Profile" className="w-8 h-8 rounded-full border border-white shadow-sm" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
-                <span className="text-sm font-medium hidden md:block">Perfil</span>
-              </button>
-            </Link>
-            <button
-              onClick={() => logout()}
-              className="p-2.5 rounded-full hover:bg-black/5 text-muted-foreground hover:text-foreground transition-colors"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5" />
+    <div className="min-h-screen bg-slate-50/50 pb-20">
+      <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-xl border-b border-white shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
+          <Link href="/">
+            <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Voltar</span>
             </button>
-          </div>
+          </Link>
+          <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">Minha Jornada</h1>
+          <div className="w-20" />
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <InspiringMessage />
+      <main className="max-w-4xl mx-auto px-4 pt-8 space-y-12">
+        {/* Versículo do Dia */}
+        <section className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/60 text-center space-y-6">
+          <div className="flex justify-center">
+            <Quote className="w-8 h-8 text-primary/20" />
+          </div>
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <p className="text-3xl md:text-5xl text-foreground leading-snug tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+              "{verseOfDay.text}"
+            </p>
+            <p className="text-sm font-bold uppercase tracking-widest text-primary/60">
+              {verseOfDay.reference}
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            <button 
+              onClick={() => setShowReflection(true)}
+              className="px-6 py-2.5 rounded-full bg-white border border-black/5 text-slate-700 font-bold text-sm flex items-center gap-2 hover:bg-primary/5 transition-all shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              Refletir
+            </button>
+          </div>
+        </section>
 
-        {/* Unified Filter & Sort Controls */}
-        <div className="max-w-2xl mx-auto mb-12 px-2">
-          <div className="bg-white/40 backdrop-blur-md p-1.5 rounded-full border border-white/60 shadow-xl shadow-black/5 flex items-center gap-1">
-            <div className="flex-[1.5] flex items-center gap-2 pl-4 pr-1 py-1 min-w-0">
-              <Filter className="w-3.5 h-3.5 text-primary/60 shrink-0" />
-              <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-7 text-xs font-bold text-slate-700 p-0 truncate">
-                  <SelectValue placeholder="Filtrar" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
-                  {filters.map(f => (
-                    <SelectItem key={f.id} value={f.id} className="rounded-xl py-2 text-xs">
-                      {f.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {/* My Contributions - Restored Design */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-sm font-bold text-foreground/60 uppercase tracking-widest flex items-center gap-2 font-sans">
+              Minhas Contribuições
+              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-sans">{messages?.length}</span>
+            </h3>
             
-            <div className="w-px h-5 bg-black/5 shrink-0" />
+            {messages && messages.length > 0 && (
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={selectAll}
+                  className="text-xs font-bold text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all flex items-center gap-2"
+                >
+                  {selectedIds.length === messages.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                  {selectedIds.length === messages.length ? "Nenhum" : "Todos"}
+                </button>
+                {selectedIds.length > 0 && (
+                  <button 
+                    onClick={handleDeleteBulk}
+                    className="bg-destructive text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-destructive/90 shadow-lg shadow-destructive/20 transition-all active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Excluir ({selectedIds.length})
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
-            <div className="flex-1 flex items-center gap-2 pl-2 pr-1 py-1 min-w-0">
-              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-full bg-transparent border-none shadow-none focus:ring-0 h-7 text-xs font-bold text-slate-700 p-0 truncate">
-                  <SelectValue placeholder="Ordenar" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
-                  <SelectItem value="newest" className="rounded-xl py-2 text-xs">Mais recentes</SelectItem>
-                  <SelectItem value="popular" className="rounded-xl py-2 text-xs">Mais interações</SelectItem>
-                </SelectContent>
-              </Select>
+          {messages && messages.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {messages.map((msg, idx) => (
+                <div key={msg.id} className="relative group">
+                  <div className="absolute top-4 left-4 z-20">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(msg.id);
+                      }}
+                      className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
+                    >
+                      {selectedIds.includes(msg.id) ? (
+                        <CheckSquare className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Square className="w-4 h-4 text-slate-300" />
+                      )}
+                    </button>
+                  </div>
+                  <FloatingBubble message={msg} index={idx} isAdmin={isAdmin} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white/20 rounded-3xl border border-dashed border-slate-200">
+              <p className="text-muted-foreground text-sm">Você ainda não compartilhou nenhuma mensagem.</p>
+            </div>
+          )}
+        </section>
+
+        {/* Community Guide - Updated with types */}
+        <section className="bg-gradient-to-br from-primary/10 to-amber-100/10 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/60">
+          <div className="flex items-center gap-4 mb-8 text-center md:text-left justify-center md:justify-start">
+            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+              <HandHelping className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-display font-bold">Guia da Comunidade</h3>
+              <p className="text-sm text-muted-foreground">Entenda como você pode contribuir com a nossa rede de fé</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center mb-4">
+                <Heart className="w-5 h-5" />
+              </div>
+              <p className="font-bold text-slate-800 mb-2">Oração</p>
+              <p className="text-xs text-slate-600 leading-relaxed">Peça intercessão por uma causa pessoal, familiar ou por alguém especial. A comunidade orará por você.</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4">
+                <Flame className="w-5 h-5" />
+              </div>
+              <p className="font-bold text-slate-800 mb-2">Vela Especial</p>
+              <p className="text-xs text-slate-600 leading-relaxed">Destaque sua oração com uma vela virtual. Mensagens especiais recebem mais visibilidade e atenção.</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <p className="font-bold text-slate-800 mb-2">Graça alcançada</p>
+              <p className="text-xs text-slate-600 leading-relaxed">Celebre e agradeça por uma benção recebida. Seu testemunho fortalece a fé de todos os irmãos.</p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center mb-4">
+                <Ghost className="w-5 h-5" />
+              </div>
+              <p className="font-bold text-slate-800 mb-2">Confissão</p>
+              <p className="text-xs text-slate-600 leading-relaxed">Compartilhe um peso do coração de forma anônima. Alivie sua alma e receba o perdão simbólico da comunidade.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {showReflection && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl relative">
+            <button onClick={() => setShowReflection(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 text-slate-400"><X className="w-5 h-5" /></button>
+            <div className="space-y-4 text-center">
+              <h3 className="text-xl font-display font-bold text-slate-900">Reflexão</h3>
+              <p className="text-slate-600 leading-relaxed font-medium">{verseOfDay.reflection}</p>
+              <button onClick={() => setShowReflection(false)} className="w-full mt-4 py-3 rounded-2xl bg-primary text-white font-bold">Amém</button>
             </div>
           </div>
         </div>
-
-        {/* Messages Grid */}
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
-            <p>Recebendo as mensagens...</p>
-          </div>
-        ) : sortedMessages && sortedMessages.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedMessages.map((message, idx) => (
-              <FloatingBubble key={message.id} message={message} index={idx} isAdmin={isAdmin} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 max-w-2xl mx-auto">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-              <span className="text-3xl opacity-50">🕊️</span>
-            </div>
-            <h3 className="text-2xl font-display font-semibold mb-2">O céu está silencioso</h3>
-            <p className="text-muted-foreground">Seja o primeiro a compartilhar uma message de fé.</p>
-          </div>
-        )}
-      </main>
-
-      {/* Floating Action Button */}
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 hover:-translate-y-1 hover:shadow-primary/50 transition-all duration-300 z-40 group"
-      >
-        <Plus className="w-8 h-8 transition-transform group-hover:rotate-90 duration-300" />
-      </button>
-
-      {/* Create Modal */}
-      <CreateMessageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      )}
     </div>
   );
 }
