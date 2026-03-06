@@ -229,10 +229,12 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
             disabled={likeMutation.isPending || pardonMutation.isPending || (isSin && message.isPardoned)}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium select-none touch-manipulation transition-all duration-150 active:scale-95",
-              (isPrayer || isGrace) && (message.likesCount > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground/60 active:bg-primary/10 active:text-primary"),
+              (isPrayer || isGrace) && (message.likesCount > 0
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-primary/10 [@media(hover:hover)]:hover:text-primary"),
               isSin && message.isPardoned
                 ? "bg-green-100 text-green-700 cursor-default"
-                : isSin && "text-muted-foreground/60 active:bg-green-50 active:text-green-600"
+                : isSin && "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-green-50 [@media(hover:hover)]:hover:text-green-600"
             )}
           >
             {isPrayer ? (
