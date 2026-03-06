@@ -138,15 +138,23 @@ export default function Dashboard() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 p-1.5 pr-3 rounded-full hover:bg-black/5 transition-all duration-300 outline-none">
-                  {user?.profileImageUrl ? (
-                    <img src={user.profileImageUrl} alt="Profile" className="w-8 h-8 rounded-full border border-white shadow-sm" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <Compass className="w-4 h-4" />
+                <button className="flex items-center gap-2 p-1.5 pr-4 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/10 transition-all duration-300 outline-none group">
+                  <div className="relative">
+                    {user?.profileImageUrl ? (
+                      <img src={user.profileImageUrl} alt="Profile" className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary border-2 border-white shadow-sm">
+                        <User className="w-5 h-5" />
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-sm border border-black/5">
+                      <Filter className="w-2 h-2 text-primary" />
                     </div>
-                  )}
-                  <span className="text-sm font-bold hidden md:block">Minha jornada</span>
+                  </div>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">Minha jornada</span>
+                    <span className="text-xs font-bold text-foreground">Opções</span>
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 rounded-2xl p-2 shadow-2xl border-none" align="end">
