@@ -90,9 +90,9 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
   return (
     <div className="masonry-item">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: index * 0.1 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.3), ease: "easeOut" }}
         className={cn(
           "rounded-[2rem] p-6 relative group overflow-hidden transition-all duration-500 shadow-sm",
           isSpecial
@@ -132,11 +132,11 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
         )}
 
         <div className={cn(
-          "absolute -top-10 -right-10 w-32 h-32 blur-3xl opacity-30 rounded-full pointer-events-none transition-all duration-700 group-hover:opacity-60",
-          isPrayer && !isSpecial && "bg-amber-400",
-          isPrayer && isSpecial && "bg-yellow-300 opacity-40",
-          isGrace && "bg-blue-400",
-          isSin && "bg-slate-400"
+          "absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full pointer-events-none",
+          isPrayer && !isSpecial && "opacity-25 bg-amber-400",
+          isPrayer && isSpecial && "opacity-35 bg-yellow-300",
+          isGrace && "opacity-25 bg-blue-400",
+          isSin && "opacity-20 bg-slate-400"
         )} />
 
         <div className="flex items-start justify-between mb-4 relative z-10">
