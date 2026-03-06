@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { KeyRound, Eye, EyeOff as EyeOffIcon, AlertTriangle, Camera, Save, User, Loader2, MapPin, Search } from "lucide-react";
+import { KeyRound, Eye, EyeOff as EyeOffIcon, AlertTriangle, Camera, Save, User, Loader2, MapPin, Search, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -98,10 +98,13 @@ export default function AccountPage() {
       <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-xl border-b border-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
           <Link href="/">
-            <button className="text-xl font-display font-bold bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">Minha Fé</button>
+            <button className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Voltar</span>
+            </button>
           </Link>
-          <h1 className="text-lg font-bold">Minha Conta</h1>
-          <div className="w-10" />
+          <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">Minha Conta</h1>
+          <div className="w-20" />
         </div>
       </header>
 
