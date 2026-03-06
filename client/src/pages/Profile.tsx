@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { FloatingBubble } from "@/components/FloatingBubble";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -80,17 +81,26 @@ export default function Profile() {
 
       <main className="max-w-4xl mx-auto px-4 pt-8 space-y-12">
         {/* Versículo do Dia */}
-        <section className="bg-white/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/60 text-center space-y-6">
+        <section className="bg-transparent text-center space-y-6 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/10 to-transparent blur-3xl -z-10" />
           <div className="flex justify-center">
             <Quote className="w-8 h-8 text-primary/20" />
           </div>
           <div className="space-y-2 max-w-2xl mx-auto">
-            <p className="text-3xl md:text-5xl text-foreground leading-snug tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-              "{verseOfDay.text}"
-            </p>
-            <p className="text-sm font-bold uppercase tracking-widest text-primary/60">
-              {verseOfDay.reference}
-            </p>
+            <AnimatePresence mode="wait">
+              <motion.div
+                initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+              >
+                <p className="text-3xl md:text-5xl text-foreground leading-snug tracking-tight text-glow" style={{ fontFamily: "var(--font-display)" }}>
+                  "{verseOfDay.text}"
+                </p>
+                <p className="text-sm font-bold uppercase tracking-widest text-primary/60 mt-4">
+                  {verseOfDay.reference}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             <button 
