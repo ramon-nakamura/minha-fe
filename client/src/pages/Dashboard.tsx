@@ -151,7 +151,10 @@ export default function Dashboard() {
                       <Filter className="w-2 h-2 text-primary" />
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-foreground">Minha jornada</span>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">Minha jornada</span>
+                    <span className="text-xs font-bold text-foreground">Opções</span>
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 rounded-2xl p-2 shadow-2xl border-none" align="end">
