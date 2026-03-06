@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
 import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, HandHelping, MessageSquare, Flame, CheckCircle2, Ghost, Heart } from "lucide-react";
@@ -25,11 +25,163 @@ export default function Profile() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showReflection, setShowReflection] = useState(false);
 
-  const verseOfDay = {
-    text: "O Senhor é o meu pastor, nada me faltará.",
-    reference: "Salmos 23:1",
-    reflection: "Este versículo lembra que Deus é aquele que guia, protege e supre. Mesmo em momentos de incerteza, confiar no cuidado divino traz paz ao coração."
-  };
+  const verses = [
+    {
+      text: "O Senhor é o meu pastor, nada me faltará.",
+      reference: "Salmos 23:1",
+      reflection: "Há momentos em que a vida parece escassa — de tempo, de energia, de esperança. Este versículo não promete ausência de dificuldades, mas presença constante. Seja qual for o caminho que você percorre, há uma força maior que caminha ao seu lado e cuida para que o essencial nunca falte."
+    },
+    {
+      text: "Porque sou eu que conheço os planos que tenho para vocês, planos de fazê-los prosperar e não de causar dano, planos de dar a vocês esperança e um futuro.",
+      reference: "Jeremias 29:11",
+      reflection: "Quando o presente parece sem saída, é difícil enxergar além dele. Mas este versículo convida a uma perspectiva maior: a de que existe um propósito tecido para cada vida. Não importa a origem, a história ou os tropeços — há um futuro sendo construído para você."
+    },
+    {
+      text: "Posso tudo naquele que me fortalece.",
+      reference: "Filipenses 4:13",
+      reflection: "Não se trata de invencibilidade, mas de resiliência. Este versículo fala de uma força que não vem de dentro sozinha, mas de uma fonte que nos sustenta quando chegamos ao limite. Cada pessoa que já levantou depois de cair conhece, de alguma forma, esse poder."
+    },
+    {
+      text: "Pois Deus não nos deu um espírito de timidez, mas de poder, de amor e de equilíbrio.",
+      reference: "2 Timóteo 1:7",
+      reflection: "O medo é parte da experiência humana, mas não precisa ser o condutor da sua vida. Você foi feito para agir com coragem, para amar com profundidade e para tomar decisões com clareza. Esses dons já estão em você — às vezes só precisam ser lembrados."
+    },
+    {
+      text: "Vinde a mim, todos os que estão cansados e sobrecarregados, e eu lhes darei descanso.",
+      reference: "Mateus 11:28",
+      reflection: "Vivemos num mundo que glorifica a produtividade a qualquer custo. Este versículo é um convite radical ao oposto: parar, respirar, receber cuidado. Não há vergonha no cansaço — há humanidade. E nessa humanidade, há espaço para ser acolhido."
+    },
+    {
+      text: "Não se inquietem com nada, mas em tudo, pela oração e súplica, com ação de graças, apresentem seus pedidos a Deus.",
+      reference: "Filipenses 4:6",
+      reflection: "A ansiedade é uma das experiências mais comuns da vida contemporânea. Este versículo não minimiza o que você sente — ele oferece uma alternativa: transformar a preocupação em conversa. Falar sobre o que pesa, seja com Deus, seja com alguém de confiança, já é um ato de cura."
+    },
+    {
+      text: "O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha.",
+      reference: "1 Coríntios 13:4",
+      reflection: "O amor verdadeiro não precisa competir nem provar nada. Ele simplesmente existe, sustenta e respeita. Esta descrição é um espelho útil para nossas relações — familiares, românticas, de amizade — e nos lembra que amar bem é uma prática diária, não um sentimento que simplesmente acontece."
+    },
+    {
+      text: "Não faças nada por ambição egoísta ou vanglória, mas com humildade considere os outros superiores a si mesmo.",
+      reference: "Filipenses 2:3",
+      reflection: "Num mundo que incentiva a autopromoção constante, a humildade parece contracultural. Mas ela não é fraqueza — é a capacidade de enxergar o outro como igualmente valioso. Quando paramos de competir e começamos a colaborar, todos crescemos."
+    },
+    {
+      text: "Sede bondosos e compassivos uns para com os outros, perdoando-vos mutuamente, assim como Deus vos perdoou em Cristo.",
+      reference: "Efésios 4:32",
+      reflection: "Perdoar não significa apagar o que aconteceu ou fingir que não doeu. Significa escolher não carregar o peso do ressentimento como identidade. O perdão, antes de ser um presente ao outro, é uma liberação para si mesmo."
+    },
+    {
+      text: "Antes de te formar no ventre materno, eu te conheci; antes de nasceres, eu te separei.",
+      reference: "Jeremias 1:5",
+      reflection: "Você não é um acidente. Independente das circunstâncias do seu nascimento, da sua família, da sua trajetória — há um propósito inscrito na sua existência. Este versículo é um convite a acreditar que você foi pensado, desejado e chamado para algo significativo."
+    },
+    {
+      text: "Confia no Senhor de todo o teu coração e não te apoies no teu próprio entendimento.",
+      reference: "Provérbios 3:5",
+      reflection: "Nossa mente é poderosa, mas limitada. Há momentos em que as respostas não cabem na lógica — e precisamos de algo maior que nos oriente. Confiar não é ignorar a razão, mas reconhecer que existe sabedoria além do que podemos calcular sozinhos."
+    },
+    {
+      text: "Não se amolde ao padrão deste mundo, mas transforme-se pela renovação da sua mente.",
+      reference: "Romanos 12:2",
+      reflection: "As pressões para ser o que o mundo espera de você são enormes — no corpo, no sucesso, no comportamento. Este versículo convida à resistência gentil: a de construir sua identidade de dentro para fora, renovando continuamente o que você acredita sobre si mesmo e sobre o mundo."
+    },
+    {
+      text: "Mesmo que eu ande pelo vale da sombra da morte, não temerei mal algum, pois tu estás comigo.",
+      reference: "Salmos 23:4",
+      reflection: "Todos nós passamos por períodos sombrios — perdas, crises, dores que parecem não ter fim. Este versículo não promete que o vale não existirá, mas que você não o atravessa sozinho. Há uma presença que acompanha mesmo quando não conseguimos sentir."
+    },
+    {
+      text: "Portanto, não temais; mais valeis do que muitos pardais.",
+      reference: "Mateus 10:31",
+      reflection: "Em momentos de insegurança, é fácil se sentir pequeno ou descartável. Este versículo, com toda a sua simplicidade, afirma o contrário: você tem valor imensurável. Não pelo que produz ou aparenta, mas pelo simples fato de existir."
+    },
+    {
+      text: "Mas os que esperam no Senhor renovarão as suas forças. Voarão alto como águias.",
+      reference: "Isaías 40:31",
+      reflection: "Esperar não é passividade — é confiança ativa. Há um tipo de força que só nasce quando paramos de forçar e permitimos ser renovados. Este versículo fala de voos que ainda estão por vir, de alturas que o cansaço de hoje não pode imaginar."
+    },
+    {
+      text: "Amai-vos uns aos outros como eu vos amei.",
+      reference: "João 13:34",
+      reflection: "Este é um dos mandamentos mais simples e mais difíceis ao mesmo tempo. Amar como Jesus amou é amar sem distinção de origem, aparência, crença ou história. É um amor que inclui, que serve, que não exige ser perfeito para merecer cuidado."
+    },
+    {
+      text: "Buscai primeiro o Reino de Deus e a sua justiça, e todas essas coisas vos serão acrescentadas.",
+      reference: "Mateus 6:33",
+      reflection: "Quando colocamos o que realmente importa no centro, o restante encontra seu lugar. Este versículo não é uma promessa de riqueza material — é um convite a reordenar as prioridades, colocando valores como justiça, compaixão e integridade acima da acumulação e da aparência."
+    },
+    {
+      text: "O fruto do Espírito é amor, alegria, paz, paciência, amabilidade, bondade, fidelidade, mansidão e domínio próprio.",
+      reference: "Gálatas 5:22-23",
+      reflection: "Esses não são objetivos a conquistar — são frutos que crescem naturalmente quando nos conectamos ao que é essencial. Cada um deles é uma forma de presença no mundo: estar inteiro com as pessoas que amamos, ser gentil consigo mesmo, agir com consistência mesmo quando ninguém vê."
+    },
+    {
+      text: "Honra a teu pai e a tua mãe.",
+      reference: "Êxodo 20:12",
+      reflection: "Honrar não significa concordar com tudo ou silenciar diante do que machuca. Significa reconhecer a humanidade daqueles que nos geraram — com suas falhas, suas histórias e seus limites. É possível honrar e ao mesmo tempo estabelecer limites saudáveis. As duas coisas coexistem."
+    },
+    {
+      text: "Deus é refúgio e fortaleza para nós; socorro bem presente nas tribulações.",
+      reference: "Salmos 46:1",
+      reflection: "Todos nós precisamos de um lugar seguro. Para alguns é uma pessoa, para outros é um lar, para outros é a fé. Este versículo fala de um refúgio que não fecha as portas — disponível em qualquer momento, especialmente nos mais difíceis."
+    },
+    {
+      text: "Não julgueis, para que não sejais julgados.",
+      reference: "Mateus 7:1",
+      reflection: "Julgamos o que não entendemos, e geralmente entendemos muito menos do que pensamos sobre a vida do outro. Este versículo nos convida à humildade de reconhecer que cada pessoa carrega uma história que não está visível na superfície. Menos julgamento, mais curiosidade e compaixão."
+    },
+    {
+      text: "Bendito o homem que confia no Senhor, cuja esperança é o Senhor.",
+      reference: "Jeremias 17:7",
+      reflection: "Esperança não é otimismo ingênuo — é a decisão de acreditar que amanhã pode ser diferente de hoje. Quando ancoramos essa esperança em algo maior que nós mesmos, ela se torna mais resistente às tempestades da vida."
+    },
+    {
+      text: "Alegrai-vos sempre no Senhor; outra vez digo: alegrai-vos.",
+      reference: "Filipenses 4:4",
+      reflection: "A alegria aqui não é superficialidade ou negação da dor. É uma escolha profunda de encontrar motivos para celebrar mesmo em meio ao imperfeito. Pequenas gratidões, momentos de beleza inesperada, conexões genuínas — a alegria muitas vezes mora nos detalhes."
+    },
+    {
+      text: "Que o Deus da esperança vos encha de todo o gozo e paz no crer.",
+      reference: "Romanos 15:13",
+      reflection: "Gozo e paz são estados internos que independem das circunstâncias externas. Este versículo fala de um preenchimento que vem de dentro — uma completude que não depende de tudo estar perfeito lá fora. É possível ter paz mesmo quando o mundo ao redor está agitado."
+    },
+    {
+      text: "Assim como quereis que os homens vos façam, fazei-o vós também a eles.",
+      reference: "Lucas 6:31",
+      reflection: "A Regra de Ouro atravessa culturas e séculos porque fala de algo universal: empatia. Antes de agir, perguntar-se como você gostaria de ser tratado nessa situação é um exercício simples que transforma relacionamentos, comunidades e sociedades inteiras."
+    },
+    {
+      text: "Eu vim para que tenham vida e a tenham em abundância.",
+      reference: "João 10:10",
+      reflection: "Abundância não é sinônimo de excesso material. É viver com plenitude — com propósito, conexão, saúde, alegria e significado. Este versículo é um convite a questionar o que realmente nos faz sentir vivos e a buscar isso com intenção."
+    },
+    {
+      text: "Onde estiver o vosso tesouro, aí estará também o vosso coração.",
+      reference: "Mateus 6:21",
+      reflection: "O que você prioriza com seu tempo, sua atenção e sua energia revela o que você realmente valoriza. Este versículo é um convite à auto-observação honesta: o que você está cultivando? O que está recebendo a melhor versão de você?"
+    },
+    {
+      text: "Sede fortes e corajosos. Não temais, nem vos atemorizeis, porque o Senhor, vosso Deus, vai convosco.",
+      reference: "Deuteronômio 31:6",
+      reflection: "Coragem não é ausência de medo — é agir mesmo com ele. Este versículo foi dito a um povo que enfrentava o desconhecido, e ressoa com todos que hoje enfrentam suas próprias travessias. Você não precisa ser invencível para seguir em frente."
+    },
+    {
+      text: "A fé é a certeza daquilo que esperamos e a prova das coisas que não vemos.",
+      reference: "Hebreus 11:1",
+      reflection: "A fé não exige respostas antes de dar o próximo passo. Ela é a capacidade de caminhar mesmo quando o caminho não está totalmente visível. É confiar no processo, nas pessoas ao nosso redor e em algo maior — mesmo quando as evidências ainda não chegaram."
+    },
+    {
+      text: "Nenhum de vós vive para si mesmo, e nenhum morre para si mesmo.",
+      reference: "Romanos 14:7",
+      reflection: "Somos seres de relação. Nossas escolhas afetam outros, e as escolhas dos outros nos afetam. Esta consciência de interdependência é a base de uma comunidade saudável — onde cada pessoa importa, onde o bem de um contribui para o bem de todos."
+    }
+  ];
+
+  const verseOfDay = useMemo(() => {
+    const idx = Math.floor(Math.random() * verses.length);
+    return verses[idx];
+  }, []);
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => 
