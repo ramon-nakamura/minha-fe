@@ -86,7 +86,32 @@ export function useLikeMessage() {
       const res = await apiRequest("POST", `/api/messages/${id}/like`);
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (id: number) => {
+      // Cancela queries em andamento para não sobrescrever o optimistic update
+      await queryClient.cancelQueries({ queryKey: ["/api/messages"] });
+
+      // Snapshot do estado anterior para rollback
+      const previousMessages = queryClient.getQueriesData({ queryKey: ["/api/messages"] });
+
+      // Atualiza todas as caches de mensagens imediatamente
+      queryClient.setQueriesData({ queryKey: ["/api/messages"] }, (old: FaithMessage[] | undefined) => {
+        if (!old) return old;
+        return old.map(msg =>
+          msg.id === id ? { ...msg, likesCount: msg.likesCount + 1 } : msg
+        );
+      });
+
+      return { previousMessages };
+    },
+    onError: (_err, _id, context) => {
+      // Reverte em caso de erro
+      if (context?.previousMessages) {
+        context.previousMessages.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
   });
@@ -100,7 +125,28 @@ export function usePardonMessage() {
       const res = await apiRequest("POST", `/api/messages/${id}/pardon`);
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/messages"] });
+
+      const previousMessages = queryClient.getQueriesData({ queryKey: ["/api/messages"] });
+
+      queryClient.setQueriesData({ queryKey: ["/api/messages"] }, (old: FaithMessage[] | undefined) => {
+        if (!old) return old;
+        return old.map(msg =>
+          msg.id === id ? { ...msg, isPardoned: true } : msg
+        );
+      });
+
+      return { previousMessages };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousMessages) {
+        context.previousMessages.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
   });
