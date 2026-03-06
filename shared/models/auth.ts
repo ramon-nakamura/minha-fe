@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: text("profile_image_url"),
+  city: varchar("city"), // Added city field
   role: varchar("role").default("user").notNull(),
   consentAcceptedAt: timestamp("consent_accepted_at"),
   createdAt: timestamp("created_at").defaultNow(),
