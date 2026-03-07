@@ -73,23 +73,8 @@ async function sendResetEmail(email: string, firstName: string | null, resetUrl:
         <tr><td align="center">
           <table width="100%" style="max-width:480px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
             <tr>
-              <td style="background:#f8f7f4;padding:24px 32px;text-align:center;border-bottom:1px solid #ede9e0;">
-                <table cellpadding="0" cellspacing="0" style="display:inline-table;">
-                  <tr>
-                    <td style="vertical-align:middle;padding-right:12px;">
-                      <table cellpadding="0" cellspacing="0" style="width:48px;height:48px;background:linear-gradient(145deg,#f59e0b,#d97706);border-radius:12px;">
-                        <tr>
-                          <td style="width:48px;height:48px;text-align:center;vertical-align:middle;border-radius:12px;">
-                            <span style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:white;line-height:1;">Fé</span>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                    <td style="vertical-align:middle;">
-                      <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#1e293b;letter-spacing:-0.3px;white-space:nowrap;">Minha Fé</span>
-                    </td>
-                  </tr>
-                </table>
+              <td style="padding:0;line-height:0;">
+                <img src="https://minhafe.com.br/og-image.jpg" alt="Minha Fé" width="480" style="width:100%;max-width:480px;height:auto;display:block;border-radius:24px 24px 0 0;" />
               </td>
             </tr>
             <tr>
