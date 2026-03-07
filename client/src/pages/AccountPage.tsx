@@ -32,19 +32,20 @@ export default function AccountPage() {
 
   // Simple city autocomplete simulation
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cityTouched, setCityTouched] = useState(false);
 
   useEffect(() => {
+    if (!cityTouched) {
+      setCitySuggestions([]);
+      return;
+    }
     if (city.length > 2) {
-      // In a real app, this would be an API call to a geocoding service
       const mockCities = ["São Paulo, SP", "Rio de Janeiro, RJ", "Belo Horizonte, MG", "Curitiba, PR", "Porto Alegre, RS", "Salvador, BA", "Fortaleza, CE", "Brasília, DF", "Manaus, AM", "Recife, PE"];
       setCitySuggestions(mockCities.filter(c => c.toLowerCase().includes(city.toLowerCase())));
-      setShowSuggestions(true);
     } else {
       setCitySuggestions([]);
-      setShowSuggestions(false);
     }
-  }, [city]);
+  }, [city, cityTouched]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -156,19 +157,20 @@ export default function AccountPage() {
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
                 <input 
                   value={city} 
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) => { setCityTouched(true); setCity(e.target.value); }}
                   placeholder="Ex: São Paulo, SP"
                   className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/80 border border-black/5 focus:ring-2 ring-primary/10 transition-all outline-none"
                 />
               </div>
-              {showSuggestions && citySuggestions.length > 0 && (
+              {cityTouched && citySuggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-2 bg-white/90 backdrop-blur-xl border border-black/5 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
                   {citySuggestions.map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => {
                         setCity(suggestion);
-                        setShowSuggestions(false);
+                        setCityTouched(false);
+                        setCitySuggestions([]);
                       }}
                       className="w-full px-6 py-3 text-left text-sm hover:bg-primary/5 transition-colors flex items-center gap-3"
                     >
