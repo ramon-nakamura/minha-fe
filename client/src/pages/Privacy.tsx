@@ -176,8 +176,8 @@ export default function Privacy() {
               Para dúvidas, solicitações ou exercício de direitos relacionados à proteção de dados:
             </p>
             <p className="text-foreground/80 leading-relaxed">
-              E-mail: <span className="font-medium">contato@minhafe.app</span><br />
-              Responsável pelo tratamento: Minha Fé
+              E-mail: <span className="font-medium">contato@minhafe.com.br</span><br />
+              Responsável pelo tratamento: Equipe Minha Fé
             </p>
           </section>
         </div>
