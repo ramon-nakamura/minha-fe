@@ -1,6 +1,6 @@
-import { users, type User, type UpsertUser } from "@shared/models/auth";
+import { users, passwordResetTokens, type User, type UpsertUser, type PasswordResetToken } from "@shared/models/auth";
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
+import { eq, and, gt } from "drizzle-orm";
 
 export interface IAuthStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -9,6 +9,9 @@ export interface IAuthStorage {
   updateUser(id: string, updates: Partial<UpsertUser>): Promise<User>;
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<void>;
+  createPasswordResetToken(data: { userId: string; token: string; expiresAt: Date }): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenUsed(id: string): Promise<void>;
 }
 
 class AuthStorage implements IAuthStorage {
@@ -52,6 +55,22 @@ class AuthStorage implements IAuthStorage {
 
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  async createPasswordResetToken(data: { userId: string; token: string; expiresAt: Date }): Promise<PasswordResetToken> {
+    // Invalida tokens anteriores do mesmo usuário
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, data.userId));
+    const [token] = await db.insert(passwordResetTokens).values(data).returning();
+    return token;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [record] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    return record;
+  }
+
+  async markPasswordResetTokenUsed(id: string): Promise<void> {
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, id));
   }
 }
 
