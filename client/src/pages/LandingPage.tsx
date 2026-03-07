@@ -13,6 +13,31 @@ export default function LandingPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
   const [error, setError] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleForgotPassword = async () => {
+    setForgotError("");
+    if (!forgotEmail) { setForgotError("Informe seu email"); return; }
+    setForgotLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setForgotSent(true);
+    } catch (err: any) {
+      setForgotError(err.message || "Erro ao enviar email");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
   const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
@@ -214,7 +239,17 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {mode === "register" && (
+                {mode === "login" && (
+                  <div className="text-right -mt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotSent(false); setForgotError(""); }}
+                      className="text-xs text-primary font-semibold hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                )}
                   <label className="flex items-start gap-2.5 cursor-pointer select-none" data-testid="label-consent">
                     <input
                       data-testid="checkbox-consent"
@@ -256,6 +291,78 @@ export default function LandingPage() {
 
       </div>
       <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
+
+      {/* Modal Esqueci Senha */}
+      {showForgot && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative">
+            <button
+              onClick={() => setShowForgot(false)}
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-50 text-slate-400"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+
+            {forgotSent ? (
+              <div className="text-center space-y-4 py-2">
+                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Email enviado!</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Se este email estiver cadastrado, você receberá as instruções para redefinir sua senha em breve. Verifique também sua caixa de spam.
+                </p>
+                <button
+                  onClick={() => setShowForgot(false)}
+                  className="w-full py-3 rounded-2xl bg-primary text-white font-bold text-sm mt-2"
+                >
+                  Fechar
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Esqueceu sua senha?</h3>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                    Informe seu email e enviaremos um link para você criar uma nova senha.
+                  </p>
+                </div>
+
+                {forgotError && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-medium">
+                    {forgotError}
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Email</label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+                    placeholder="seu@email.com"
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-black/5 focus:ring-2 ring-primary/10 transition-all outline-none text-sm"
+                  />
+                </div>
+
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={forgotLoading || !forgotEmail}
+                  className="w-full py-3.5 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 transition-all"
+                >
+                  {forgotLoading ? (
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4"/><path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  )}
+                  Enviar instruções
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
