@@ -73,11 +73,13 @@ async function sendResetEmail(email: string, firstName: string | null, resetUrl:
         <tr><td align="center">
           <table width="100%" style="max-width:480px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
             <tr>
-              <td style="background:linear-gradient(135deg,#d97706,#f59e0b);padding:32px;text-align:center;">
-                <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                  <span style="font-size:24px;font-weight:bold;color:white;">Fé</span>
+              <td style="background:#f8f7f4;padding:28px 32px;text-align:center;border-bottom:1px solid #f1f0ed;">
+                <div style="display:inline-flex;align-items:center;gap:12px;">
+                  <div style="width:48px;height:48px;background:linear-gradient(145deg,#f59e0b,#d97706);border-radius:12px;box-shadow:0 2px 8px rgba(217,119,6,0.35);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:white;line-height:1;">Fé</span>
+                  </div>
+                  <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#1e293b;letter-spacing:-0.3px;">Minha Fé</span>
                 </div>
-                <h1 style="margin:0;color:white;font-size:22px;font-weight:700;">Minha Fé</h1>
               </td>
             </tr>
             <tr>
