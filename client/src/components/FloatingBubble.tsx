@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { HandHeart, EyeOff, Heart, CheckCircle2, Trash2, Pencil, X, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -34,6 +34,69 @@ function CandleIcon({ className }: { className?: string }) {
   );
 }
 
+
+// ── Partículas ─────────────────────────────────────────────────────────────
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  angle: number;
+  color: string;
+  size: number;
+}
+
+function ParticleBurst({ particles }: { particles: Particle[] }) {
+  if (particles.length === 0) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-visible z-50">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            width: p.size,
+            height: p.size,
+            background: p.color,
+            left: "50%",
+            top: "50%",
+            x: "-50%",
+            y: "-50%",
+          }}
+          initial={{ x: "-50%", y: "-50%", opacity: 1, scale: 1 }}
+          animate={{
+            x: `calc(-50% + ${Math.cos(p.angle) * 28}px)`,
+            y: `calc(-50% + ${Math.sin(p.angle) * 28}px)`,
+            opacity: 0,
+            scale: 0.2,
+          }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function useParticles(colors: string[]) {
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const counterRef = useRef(0);
+
+  const burst = useCallback(() => {
+    const count = 8;
+    const newParticles: Particle[] = Array.from({ length: count }, (_, i) => ({
+      id: counterRef.current++,
+      x: 0,
+      y: 0,
+      angle: (i / count) * Math.PI * 2 + Math.random() * 0.4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 4 + 3,
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 600);
+  }, [colors]);
+
+  return { particles, burst };
+}
+
 interface FloatingBubbleProps {
   message: FaithMessage;
   index: number;
@@ -64,11 +127,22 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
   const isSin = message.type === 'sin';
   const isSpecial = message.isSpecial;
 
+  const prayerColors = isSpecial
+    ? ["#f5c842", "#f0a020", "#fde68a", "#d97706", "#fff8a0"]
+    : ["#d97706", "#fbbf24", "#fde68a", "#f59e0b", "#fcd34d"];
+  const graceColors = ["#3b82f6", "#93c5fd", "#60a5fa", "#bfdbfe", "#2563eb"];
+  const sinColors = ["#22c55e", "#86efac", "#4ade80", "#bbf7d0", "#16a34a"];
+
+  const particleColors = isPrayer ? prayerColors : isGrace ? graceColors : sinColors;
+  const { particles, burst } = useParticles(particleColors);
+
   const handleAction = () => {
     if (isPrayer || isGrace) {
       likeMutation.mutate(message.id);
+      burst();
     } else if (isSin && !message.isPardoned) {
       pardonMutation.mutate(message.id);
+      burst();
     }
   };
 
@@ -230,7 +304,7 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
             onClick={handleAction}
             disabled={likeMutation.isPending || pardonMutation.isPending || (isSin && message.isPardoned)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium select-none touch-manipulation transition-all duration-150 active:scale-95",
+              "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium select-none touch-manipulation transition-all duration-150 active:scale-95",
               (isPrayer || isGrace) && (message.likesCount > 0
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-primary/10 [@media(hover:hover)]:hover:text-primary"),
@@ -239,6 +313,7 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
                 : isSin && "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-green-50 [@media(hover:hover)]:hover:text-green-600"
             )}
           >
+            <ParticleBurst particles={particles} />
             {isPrayer ? (
               <>
                 <CandleIcon className={cn("w-4 h-4 pointer-events-none", message.likesCount > 0 && "fill-current")} />
