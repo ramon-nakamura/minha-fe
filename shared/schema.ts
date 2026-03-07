@@ -62,4 +62,4 @@ export type Payment = typeof payments.$inferSelect;
 
 export type CreateMessageRequest = InsertMessage;
 export type UpdateMessageRequest = Partial<InsertMessage> & { likesCount?: number; isPardoned?: boolean; isSpecial?: boolean };
-export type MessageResponseType = Message & { authorName?: string };
+export type MessageResponseType = Message & { authorName?: string; authorCity?: string };
