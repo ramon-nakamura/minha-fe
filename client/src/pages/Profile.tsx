@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, HandHelping, MessageSquare, Flame, CheckCircle2, Ghost, Heart } from "lucide-react";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, HandHelping, MessageSquare, CheckCircle2, Ghost } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,26 @@ import { twMerge } from "tailwind-merge";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+function CandleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 2C11 3.5 9.5 5.5 9.5 7.2C9.5 8.8 10.6 9.8 12 9.8C13.4 9.8 14.5 8.8 14.5 7.2C14.5 5.5 13 3.5 12 2Z" fill="currentColor" stroke="none" />
+      <line x1="12" y1="9.8" x2="12" y2="11.5" />
+      <rect x="8.5" y="11.5" width="7" height="10" rx="1" />
+      <line x1="5" y1="21.5" x2="19" y2="21.5" />
+    </svg>
+  );
 }
 
 export default function Profile() {
@@ -339,16 +359,17 @@ export default function Profile() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center mb-4">
-                <Heart className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                <CandleIcon className="w-5 h-5" />
               </div>
               <p className="font-bold text-slate-800 mb-2">Oração</p>
               <p className="text-xs text-slate-600 leading-relaxed">Peça intercessão por uma causa pessoal, familiar ou por alguém especial. A comunidade orará por você.</p>
             </div>
 
             <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4">
-                <Flame className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 relative">
+                <CandleIcon className="w-5 h-5" />
+                <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-500" />
               </div>
               <p className="font-bold text-slate-800 mb-2">Vela Especial</p>
               <p className="text-xs text-slate-600 leading-relaxed">Destaque sua oração com uma vela virtual. Mensagens especiais recebem mais visibilidade e atenção.</p>
