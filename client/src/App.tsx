@@ -12,6 +12,7 @@ import AccountPage from "@/pages/AccountPage";
 import Admin from "@/pages/Admin";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Loader2 } from "lucide-react";
 
@@ -37,6 +38,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function Router() {
   return (
     <Switch>
+      <Route path="/redefinir-senha" component={ResetPasswordPage} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={Profile} />} />
       <Route path="/account" component={() => <ProtectedRoute component={AccountPage} />} />
