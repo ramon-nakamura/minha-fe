@@ -175,6 +175,9 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
               </p>
               <p className="text-xs text-muted-foreground capitalize">
                 {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: ptBR })}
+                {!isSin && (message as any).authorCity && (
+                  <span className="before:content-['·'] before:mx-1">{(message as any).authorCity}</span>
+                )}
               </p>
             </div>
           </div>
