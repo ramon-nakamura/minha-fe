@@ -250,6 +250,8 @@ export default function LandingPage() {
                     </button>
                   </div>
                 )}
+
+                {mode === "register" && (
                   <label className="flex items-start gap-2.5 cursor-pointer select-none" data-testid="label-consent">
                     <input
                       data-testid="checkbox-consent"
