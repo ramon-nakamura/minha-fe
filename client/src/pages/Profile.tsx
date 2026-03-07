@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, HandHelping, MessageSquare, CheckCircle2, Ghost } from "lucide-react";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -349,7 +349,7 @@ export default function Profile() {
         <section className="bg-gradient-to-br from-primary/10 to-amber-100/10 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/60">
           <div className="flex items-center gap-4 mb-8 text-center md:text-left justify-center md:justify-start">
             <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
-              <HandHelping className="w-6 h-6" />
+              <BookPlus className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-xl font-display font-bold">Guia da Comunidade</h3>
@@ -358,7 +358,7 @@ export default function Profile() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+            <div className="p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(38,146,255,0.12)] hover:bg-white/60 hover:border-white transition-all duration-500">
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
                 <CandleIcon className="w-5 h-5" />
               </div>
@@ -366,7 +366,7 @@ export default function Profile() {
               <p className="text-xs text-slate-600 leading-relaxed">Peça intercessão por uma causa pessoal, familiar ou por alguém especial. A comunidade orará por você.</p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
+            <div className="p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(38,146,255,0.12)] hover:bg-white/60 hover:border-white transition-all duration-500">
               <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 relative">
                 <CandleIcon className="w-5 h-5" />
                 <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-500" />
@@ -375,17 +375,17 @@ export default function Profile() {
               <p className="text-xs text-slate-600 leading-relaxed">Destaque sua oração com uma vela virtual. Mensagens especiais recebem mais visibilidade e atenção.</p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center mb-4">
-                <CheckCircle2 className="w-5 h-5" />
+            <div className="p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(38,146,255,0.12)] hover:bg-white/60 hover:border-white transition-all duration-500">
+              <div className="w-10 h-10 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center mb-4">
+                <HandHeart className="w-5 h-5" />
               </div>
               <p className="font-bold text-slate-800 mb-2">Graça alcançada</p>
               <p className="text-xs text-slate-600 leading-relaxed">Celebre e agradeça por uma benção recebida. Seu testemunho fortalece a fé de todos os irmãos.</p>
             </div>
 
-            <div className="p-5 rounded-3xl bg-white/40 border border-white/60 shadow-sm hover:bg-white/60 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center mb-4">
-                <Ghost className="w-5 h-5" />
+            <div className="p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(38,146,255,0.12)] hover:bg-white/60 hover:border-white transition-all duration-500">
+              <div className="w-10 h-10 rounded-xl bg-slate-200/80 text-slate-600 flex items-center justify-center mb-4">
+                <EyeOff className="w-5 h-5" />
               </div>
               <p className="font-bold text-slate-800 mb-2">Confissão</p>
               <p className="text-xs text-slate-600 leading-relaxed">Compartilhe um peso do coração de forma anônima. Alivie sua alma e receba o perdão simbólico da comunidade.</p>
