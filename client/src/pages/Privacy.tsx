@@ -134,7 +134,7 @@ export default function Privacy() {
               <li>Revogação do consentimento</li>
             </ul>
             <p className="text-foreground/80 leading-relaxed">
-              Solicitações podem ser feitas pelo e-mail: <span className="font-medium">contato@minhafe.app</span>
+              Solicitações podem ser feitas pelo e-mail: <span className="font-medium">contato@minhafe.com.br</span>
             </p>
           </section>
 
