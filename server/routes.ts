@@ -26,16 +26,23 @@ export async function registerRoutes(
         msgs.map(async (m) => {
           let authorName = undefined;
           let authorImage = undefined;
+          let authorCity = undefined;
 
           if (m.authorId && m.type !== "sin") {
             const user = await authStorage.getUser(m.authorId);
-            authorName = user?.firstName
-              ? `${user.firstName} ${user.lastName || ""}`.trim()
-              : user?.email?.split("@")[0] || "Unknown";
+            if (user?.firstName) {
+              const last = user.lastName
+                ? user.lastName.trim().split(/\s+/).map((p: string) => p[0].toUpperCase() + ".").join(" ")
+                : "";
+              authorName = last ? `${user.firstName} ${last}` : user.firstName;
+            } else {
+              authorName = user?.email?.split("@")[0] || "Unknown";
+            }
             authorImage = user?.profileImageUrl;
+            authorCity = user?.city || undefined;
           }
 
-          return { ...m, authorName, authorImage };
+          return { ...m, authorName, authorImage, authorCity };
         })
       );
 
