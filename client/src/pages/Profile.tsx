@@ -51,7 +51,7 @@ export default function Profile() {
 
   const openReflection = () => {
     setReflectionPhase("animating");
-    setTimeout(() => setReflectionPhase("open"), 2200);
+    setTimeout(() => setReflectionPhase("open"), 3000);
   };
   const closeReflection = () => {
     setReflectionPhase("idle");
@@ -648,77 +648,58 @@ export default function Profile() {
       {reflectionPhase !== "idle" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
 
-          {/* Camada de fundo — escurece suavemente */}
+          {/* Base branca */}
           <motion.div
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ background: "radial-gradient(ellipse at 50% 40%, #1a1035 0%, #0d0820 100%)" }}
-            transition={{ duration: 0.8, ease: "easeIn" }}
+            transition={{ duration: 1.6, ease: "easeInOut" }}
+            style={{ background: "#fffef9" }}
           />
 
-          {/* Luz central divina */}
+          {/* Orbe dourado central — expande lentamente do centro */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: reflectionPhase === "open" ? 0 : [0, 0.7, 0.5] }}
-            transition={{ duration: 1.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+            initial={{ opacity: 0, scale: 0.2 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 3.2, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              background: "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(253,230,138,0.18) 0%, rgba(217,119,6,0.08) 50%, transparent 100%)"
+              background: "radial-gradient(ellipse 75% 65% at 50% 55%, #fef3c7 0%, #fde68a 22%, #fbbf24 42%, #f59e0b 58%, #fef9eb 78%, #fffef9 100%)",
             }}
           />
 
-          {/* Nuvens SVG flutuando */}
-          {[
-            { x: "-120%", y: "10%",  scale: 1.1, delay: 0,    dur: 1.6, opacity: 0.13 },
-            { x: "120%",  y: "25%",  scale: 0.8, delay: 0.15, dur: 1.7, opacity: 0.10 },
-            { x: "-100%", y: "55%",  scale: 0.9, delay: 0.05, dur: 1.5, opacity: 0.09 },
-            { x: "100%",  y: "65%",  scale: 1.2, delay: 0.2,  dur: 1.8, opacity: 0.11 },
-            { x: "-80%",  y: "40%",  scale: 0.7, delay: 0.3,  dur: 1.4, opacity: 0.08 },
-            { x: "80%",   y: "45%",  scale: 1.0, delay: 0.1,  dur: 1.6, opacity: 0.10 },
-          ].map((c, i) => (
-            <motion.div
-              key={i}
-              className="absolute pointer-events-none"
-              style={{ left: "50%", top: c.y, translateX: "-50%" }}
-              initial={{ x: c.x, opacity: 0, scale: c.scale * 0.8 }}
-              animate={reflectionPhase === "open"
-                ? { x: c.x, opacity: 0, scale: c.scale * 0.6 }
-                : { x: "0%", opacity: c.opacity, scale: c.scale }
-              }
-              transition={{ duration: c.dur, delay: c.delay, ease: "easeOut" }}
-            >
-              <svg width="420" height="120" viewBox="0 0 420 120" fill="none">
-                <ellipse cx="210" cy="80" rx="200" ry="55" fill="white" />
-                <ellipse cx="130" cy="65" rx="110" ry="60" fill="white" />
-                <ellipse cx="290" cy="60" rx="90" ry="55" fill="white" />
-                <ellipse cx="210" cy="50" rx="80" ry="50" fill="white" />
-                <ellipse cx="160" cy="42" rx="60" ry="44" fill="white" />
-                <ellipse cx="255" cy="38" rx="55" ry="42" fill="white" />
-              </svg>
-            </motion.div>
-          ))}
+          {/* Véu superior dourado — desce lentamente */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0, y: "-25%" }}
+            animate={{ opacity: 0.6, y: "0%" }}
+            transition={{ duration: 3.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            style={{
+              background: "radial-gradient(ellipse 110% 55% at 50% -5%, #fde68a 0%, #fef3c7 40%, transparent 70%)",
+            }}
+          />
 
-          {/* Partículas de luz */}
-          {Array.from({ length: 12 }).map((_, i) => (
-            <motion.div
-              key={`p-${i}`}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                width: Math.random() * 3 + 1.5,
-                height: Math.random() * 3 + 1.5,
-                left: `${20 + Math.random() * 60}%`,
-                top: `${15 + Math.random() * 60}%`,
-                background: i % 3 === 0 ? "#fde68a" : i % 3 === 1 ? "#fff" : "#fbbf24",
-              }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={reflectionPhase === "open"
-                ? { opacity: 0, scale: 0 }
-                : { opacity: [0, 0.9, 0], scale: [0, 1, 0.5] }
-              }
-              transition={{ duration: 1.2 + Math.random() * 0.8, delay: 0.4 + Math.random() * 0.6, ease: "easeInOut" }}
-            />
-          ))}
+          {/* Véu pêssego inferior — sobe lentamente */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0, y: "25%" }}
+            animate={{ opacity: 0.4, y: "0%" }}
+            transition={{ duration: 4.0, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+            style={{
+              background: "radial-gradient(ellipse 100% 55% at 50% 115%, #fed7aa 0%, #fef3c7 45%, transparent 70%)",
+            }}
+          />
+
+          {/* Pulso suave — onda de luz que se expande e some */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0.5, scale: 0.4 }}
+            animate={{ opacity: 0, scale: 2.5 }}
+            transition={{ duration: 3.0, ease: "easeOut", delay: 0.1 }}
+            style={{
+              background: "radial-gradient(ellipse 45% 35% at 50% 50%, rgba(251,191,36,0.5) 0%, transparent 70%)",
+            }}
+          />
 
           {/* Modal de reflexão — surge após a animação */}
           <AnimatePresence>
