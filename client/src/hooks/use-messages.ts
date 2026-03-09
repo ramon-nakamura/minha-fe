@@ -76,6 +76,36 @@ export function useCreateMessage() {
   });
 }
 
+// Aplica um updater em todas as caches de mensagens (flat array ou InfiniteQuery pages)
+function patchAllMessageCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: number,
+  updater: (msg: FaithMessage) => FaithMessage
+) {
+  queryClient.setQueriesData<any>({ queryKey: ["/api/messages"] }, (old: any) => {
+    if (!old) return old;
+    // useInfiniteQuery: { pages: [{ items, nextOffset }], pageParams }
+    if (old.pages) {
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          items: page.items.map((msg: FaithMessage) =>
+            msg.id === id ? updater(msg) : msg
+          ),
+        })),
+      };
+    }
+    // useQuery flat array (Profile, Admin)
+    if (Array.isArray(old)) {
+      return old.map((msg: FaithMessage) =>
+        msg.id === id ? updater(msg) : msg
+      );
+    }
+    return old;
+  });
+}
+
 export function useLikeMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -83,7 +113,16 @@ export function useLikeMessage() {
       const res = await apiRequest("POST", `/api/messages/${id}/like`);
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/messages"] });
+      const snapshot = queryClient.getQueriesData({ queryKey: ["/api/messages"] });
+      patchAllMessageCaches(queryClient, id, (msg) => ({ ...msg, likesCount: msg.likesCount + 1 }));
+      return { snapshot };
+    },
+    onError: (_err, _id, context) => {
+      context?.snapshot?.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
   });
@@ -96,7 +135,16 @@ export function usePardonMessage() {
       const res = await apiRequest("POST", `/api/messages/${id}/pardon`);
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/messages"] });
+      const snapshot = queryClient.getQueriesData({ queryKey: ["/api/messages"] });
+      patchAllMessageCaches(queryClient, id, (msg) => ({ ...msg, isPardoned: true, likesCount: msg.likesCount + 1 }));
+      return { snapshot };
+    },
+    onError: (_err, _id, context) => {
+      context?.snapshot?.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
   });
