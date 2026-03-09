@@ -326,7 +326,7 @@ export default function Dashboard() {
                   id={`message-${message.id}`}
                   className={`transition-all duration-700 rounded-[2rem] ${highlightedId === message.id ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}`}
                 >
-                  <FloatingBubble message={message} index={idx} isAdmin={isAdmin} />
+                  <FloatingBubble message={message} index={idx} isAdmin={isAdmin} currentUserId={user?.id} />
                 </div>
               ))}
             </div>
