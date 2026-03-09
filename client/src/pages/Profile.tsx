@@ -342,11 +342,6 @@ export default function Profile() {
                   const isLeft = idx % 2 === 0;
                   const date = new Date(msg.createdAt);
 
-                  // Card fiel ao FloatingBubble em escala reduzida
-                  const isPrayer = msg.type === "prayer";
-                  const isGrace = msg.type === "grace";
-                  const isSin = msg.type === "sin";
-
                   const CardContent = (
                     <div className="relative group">
                       {/* Checkbox — visível no hover ou quando selecionado */}
