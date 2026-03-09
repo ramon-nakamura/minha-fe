@@ -5,7 +5,7 @@ import { useMessages, type MessageType } from "@/hooks/use-messages";
 import { InspiringMessage } from "@/components/InspiringMessage";
 import { FloatingBubble } from "@/components/FloatingBubble";
 import { CreateMessageModal } from "@/components/CreateMessageModal";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,8 +56,24 @@ export default function Dashboard() {
 
   const { data: notifications } = useQuery<any[]>({
     queryKey: ["/api/notifications"],
-    refetchInterval: 30000, // Refresh every 30s
+    refetchInterval: 30000,
   });
+
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const [, navigate] = useLocation();
+
+  const handleNotifClick = (messageId: number) => {
+    setHighlightedId(messageId);
+    // Scroll ao card após fechar o popover
+    setTimeout(() => {
+      const el = document.getElementById(`message-${messageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      // Remove highlight após 3s
+      setTimeout(() => setHighlightedId(null), 3000);
+    }, 150);
+  };
 
   const markReadMutation = useMutation({
     mutationFn: async () => {
@@ -106,18 +122,28 @@ export default function Dashboard() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0 rounded-2xl overflow-hidden shadow-2xl" align="end">
-                <div className="p-4 border-b bg-primary/5">
+                <div className="p-4 border-b bg-primary/5 flex items-center justify-between">
                   <h4 className="font-bold text-sm">Notificações</h4>
+                  <button
+                    onClick={() => navigate("/notificacoes")}
+                    className="text-xs text-primary font-semibold hover:underline"
+                  >
+                    Ver todas
+                  </button>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notifications && notifications.length > 0 ? (
-                    notifications.map((n) => (
-                      <div key={n.id} className={`p-4 border-b last:border-0 hover:bg-black/5 transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}>
+                    notifications.slice(0, 10).map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => handleNotifClick(n.messageId)}
+                        className={`w-full text-left p-4 border-b last:border-0 hover:bg-black/5 transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}
+                      >
                         <p className="text-sm text-foreground/80">{n.content}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">
                           {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ptBR })}
                         </p>
-                      </div>
+                      </button>
                     ))
                   ) : (
                     <div className="p-8 text-center text-muted-foreground">
@@ -226,7 +252,13 @@ export default function Dashboard() {
         ) : sortedMessages && sortedMessages.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedMessages.map((message, idx) => (
-              <FloatingBubble key={message.id} message={message} index={idx} isAdmin={isAdmin} />
+              <div
+                key={message.id}
+                id={`message-${message.id}`}
+                className={`transition-all duration-700 rounded-[2rem] ${highlightedId === message.id ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}`}
+              >
+                <FloatingBubble message={message} index={idx} isAdmin={isAdmin} />
+              </div>
             ))}
           </div>
         ) : (
