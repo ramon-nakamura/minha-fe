@@ -20,7 +20,10 @@ export async function registerRoutes(
     try {
       const type = req.query.type as string | undefined;
       const authorId = req.query.authorId as string | undefined;
-      const msgs = await storage.getMessages(type, authorId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+
+      const msgs = await storage.getMessages(type, authorId, limit, offset);
 
       const withAuthors = await Promise.all(
         msgs.map(async (m) => {
