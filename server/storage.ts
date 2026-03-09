@@ -10,10 +10,10 @@ import {
   type InsertNotification,
   type Payment,
 } from "@shared/schema";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
-  getMessages(type?: string, authorId?: string): Promise<Message[]>;
+  getMessages(type?: string, authorId?: string, limit?: number, offset?: number): Promise<Message[]>;
   getMessage(id: number): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
   updateMessage(id: number, updates: UpdateMessageRequest): Promise<Message>;
@@ -30,15 +30,22 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getMessages(type?: string, authorId?: string): Promise<Message[]> {
+  async getMessages(type?: string, authorId?: string, limit?: number, offset?: number): Promise<Message[]> {
+    const applyPagination = (q: any) => {
+      let result = q.orderBy(desc(messages.createdAt));
+      if (limit !== undefined) result = result.limit(limit);
+      if (offset !== undefined) result = result.offset(offset);
+      return result;
+    };
+
     if (type && authorId) {
-      return await db.select().from(messages).where(and(eq(messages.type, type), eq(messages.authorId, authorId))).orderBy(desc(messages.createdAt));
+      return await applyPagination(db.select().from(messages).where(and(eq(messages.type, type), eq(messages.authorId, authorId))));
     } else if (type) {
-      return await db.select().from(messages).where(and(eq(messages.type, type), eq(messages.isPrivate, false))).orderBy(desc(messages.createdAt));
+      return await applyPagination(db.select().from(messages).where(and(eq(messages.type, type), eq(messages.isPrivate, false))));
     } else if (authorId) {
-      return await db.select().from(messages).where(eq(messages.authorId, authorId)).orderBy(desc(messages.createdAt));
+      return await applyPagination(db.select().from(messages).where(eq(messages.authorId, authorId)));
     }
-    return await db.select().from(messages).where(eq(messages.isPrivate, false)).orderBy(desc(messages.createdAt));
+    return await applyPagination(db.select().from(messages).where(eq(messages.isPrivate, false)));
   }
 
   async getMessage(id: number): Promise<Message | undefined> {
