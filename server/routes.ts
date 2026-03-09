@@ -252,16 +252,21 @@ export async function registerRoutes(
   });
 
   // ── Stripe: webhook ───────────────────────────────────────────────
-  app.post("/api/payments/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  app.post("/api/payments/webhook", async (req, res) => {
     const sig = req.headers["stripe-signature"] as string;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     let event: any;
     try {
+      const rawBody = (req as any).rawBody as Buffer;
+      if (!rawBody) {
+        console.error("Webhook error: rawBody not available");
+        return res.status(400).send("Webhook Error: no raw body");
+      }
       if (webhookSecret) {
-        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       } else {
-        event = JSON.parse(req.body.toString());
+        event = JSON.parse(rawBody.toString());
       }
     } catch (err) {
       console.error("Webhook signature error:", err);
