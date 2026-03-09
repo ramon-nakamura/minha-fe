@@ -314,6 +314,23 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/notifications/all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const notifs = await storage.getNotifications(userId);
+      // Enriquecer com o conteúdo completo da mensagem
+      const enriched = await Promise.all(
+        notifs.map(async (n) => {
+          const msg = await storage.getMessage(n.messageId);
+          return { ...n, messageContent: msg?.content || null };
+        })
+      );
+      res.json(enriched);
+    } catch {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;
