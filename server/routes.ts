@@ -293,6 +293,27 @@ export async function registerRoutes(
     res.json({ received: true });
   });
 
+  // ── Notifications ─────────────────────────────────────────────────
+  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const notifs = await storage.getNotifications(userId);
+      res.json(notifs);
+    } catch {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/notifications/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      await storage.markNotificationsRead(userId);
+      res.json({ ok: true });
+    } catch {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;
