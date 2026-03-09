@@ -177,9 +177,8 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
     }
     // sin
     if (message.likesCount === 0) return "Perdoar";
-    return isOwnCard
-      ? `${message.likesCount} perdoaram você`
-      : `${message.likesCount} perdoaram`;
+    const plural = message.likesCount === 1 ? "perdão recebido" : "perdões recebidos";
+    return `${message.likesCount} ${plural}`;
   })();
 
   return (
