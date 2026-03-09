@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { HandHeart, EyeOff, Heart, CheckCircle2, Trash2, Pencil, X, Check } from "lucide-react";
+import { HandHeart, EyeOff, Heart, HeartHandshake, Trash2, Pencil, X, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { FaithMessage } from "@/hooks/use-messages";
@@ -177,10 +177,9 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
     }
     // sin
     if (message.isPardoned) {
-      const count = message.likesCount;
       return isOwnCard
-        ? `${count > 0 ? count + " " : ""}perdoaram você`
-        : `${count > 0 ? count + " " : ""}perdoaram`;
+        ? `${message.likesCount} perdoaram você`
+        : `${message.likesCount} perdoaram`;
     }
     return "Perdoar";
   })();
@@ -351,7 +350,7 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
               </>
             ) : (
               <>
-                <CheckCircle2 className={cn("w-4 h-4 pointer-events-none", message.isPardoned && "fill-current")} />
+                <HeartHandshake className={cn("w-4 h-4 pointer-events-none", message.isPardoned && "fill-current")} />
                 <span className="pointer-events-none text-xs">{actionLabel}</span>
               </>
             )}
