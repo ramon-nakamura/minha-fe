@@ -141,7 +141,7 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
     if (isPrayer || isGrace) {
       likeMutation.mutate(message.id);
       burst();
-    } else if (isSin && !message.isPardoned) {
+    } else if (isSin) {
       pardonMutation.mutate(message.id);
       burst();
     }
@@ -176,13 +176,10 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
         : `${message.likesCount} comemorando a graça recebida`;
     }
     // sin
-    if (message.isPardoned) {
-      const count = message.likesCount > 0 ? message.likesCount : 1;
-      return isOwnCard
-        ? `${count} perdoaram você`
-        : `${count} perdoaram`;
-    }
-    return "Perdoar";
+    if (message.likesCount === 0) return "Perdoar";
+    return isOwnCard
+      ? `${message.likesCount} perdoaram você`
+      : `${message.likesCount} perdoaram`;
   })();
 
   return (
@@ -327,15 +324,15 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
         <div className="flex items-center justify-between mt-4 relative z-10">
           <button
             onClick={handleAction}
-            disabled={likeMutation.isPending || pardonMutation.isPending || (isSin && message.isPardoned)}
+            disabled={likeMutation.isPending || pardonMutation.isPending}
             className={cn(
               "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium select-none touch-manipulation transition-all duration-150 active:scale-95",
               (isPrayer || isGrace) && (message.likesCount > 0
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-primary/10 [@media(hover:hover)]:hover:text-primary"),
-              isSin && message.isPardoned
-                ? "bg-green-100 text-green-700 cursor-default"
-                : isSin && "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-green-50 [@media(hover:hover)]:hover:text-green-600"
+              isSin && (message.likesCount > 0
+                ? "bg-green-100 text-green-700"
+                : "text-muted-foreground/60 [@media(hover:hover)]:hover:bg-green-50 [@media(hover:hover)]:hover:text-green-600")
             )}
           >
             <ParticleBurst particles={particles} />
@@ -351,7 +348,7 @@ export function FloatingBubble({ message, index, isAdmin, currentUserId }: Float
               </>
             ) : (
               <>
-                <HeartHandshake className={cn("w-4 h-4 pointer-events-none", message.isPardoned && "fill-current")} />
+                <HeartHandshake className={cn("w-4 h-4 pointer-events-none", message.likesCount > 0 && "fill-current")} />
                 <span className="pointer-events-none text-xs">{actionLabel}</span>
               </>
             )}
