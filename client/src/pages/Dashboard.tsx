@@ -1,12 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-import { LogOut, Plus, Loader2, User, Bell, Shield, Filter, Compass } from "lucide-react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { LogOut, Plus, Loader2, User, Bell, Shield, Filter, ArrowUp } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMessages, type MessageType } from "@/hooks/use-messages";
 import { InspiringMessage } from "@/components/InspiringMessage";
 import { FloatingBubble } from "@/components/FloatingBubble";
 import { CreateMessageModal } from "@/components/CreateMessageModal";
 import { Link, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -14,14 +13,53 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import type { MessageType } from "@/hooks/use-messages";
+
+const PAGE_SIZE = 12;
+
+type FaithMessage = {
+  id: number;
+  type: string;
+  content: string;
+  likesCount: number;
+  isPardoned: boolean;
+  isSpecial: boolean;
+  isPrivate: boolean;
+  createdAt: string | Date;
+  authorName?: string;
+  authorImage?: string;
+  authorCity?: string;
+};
+
+async function fetchMessages(params: {
+  type?: string;
+  pageParam: number;
+}): Promise<{ items: FaithMessage[]; nextOffset: number | null }> {
+  const { type, pageParam } = params;
+  const search = new URLSearchParams();
+  if (type && type !== "all") search.append("type", type);
+  search.append("limit", String(PAGE_SIZE));
+  search.append("offset", String(pageParam));
+  const res = await fetch(`/api/messages?${search.toString()}`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch messages");
+  const items: FaithMessage[] = await res.json();
+  return {
+    items,
+    nextOffset: items.length === PAGE_SIZE ? pageParam + PAGE_SIZE : null,
+  };
+}
 
 export default function Dashboard() {
   const { user, logout, isAdmin } = useAuth();
-  const [filter, setFilter] = useState<MessageType | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
+  const [filter, setFilter] = useState<MessageType | "all">("all");
+  const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [highlightedId, setHighlightedId] = useState<number | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -38,42 +76,59 @@ export default function Dashboard() {
       window.history.replaceState({}, "", "/");
     }
   }, []);
-  
-  const { data: messages, isLoading } = useMessages({ type: filter });
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["/api/messages", filter],
+    queryFn: ({ pageParam }) => fetchMessages({ type: filter, pageParam: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+  });
+
+  const allMessages = useMemo(() => {
+    return data?.pages.flatMap((p) => p.items) ?? [];
+  }, [data]);
 
   const sortedMessages = useMemo(() => {
-    if (!messages) return [];
-    
-    return [...messages].sort((a, b) => {
-      if (sortBy === 'popular') {
-        if (b.likesCount !== a.likesCount) {
-          return b.likesCount - a.likesCount;
+    if (sortBy === "popular") {
+      return [...allMessages].sort((a, b) => {
+        if (b.likesCount !== a.likesCount) return b.likesCount - a.likesCount;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    }
+    return allMessages;
+  }, [allMessages, sortBy]);
+
+  // IntersectionObserver no sentinel
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
-      }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }, [messages, sortBy]);
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Mostrar "Voltar ao topo" após 2ª página carregada
+  useEffect(() => {
+    setShowScrollTop((data?.pages.length ?? 0) >= 2);
+  }, [data?.pages.length]);
 
   const { data: notifications } = useQuery<any[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000,
   });
-
-  const [highlightedId, setHighlightedId] = useState<number | null>(null);
-  const [, navigate] = useLocation();
-
-  const handleNotifClick = (messageId: number) => {
-    setHighlightedId(messageId);
-    // Scroll ao card após fechar o popover
-    setTimeout(() => {
-      const el = document.getElementById(`message-${messageId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      // Remove highlight após 3s
-      setTimeout(() => setHighlightedId(null), 3000);
-    }, 150);
-  };
 
   const markReadMutation = useMutation({
     mutationFn: async () => {
@@ -81,16 +136,29 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-    }
+    },
   });
 
-  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+  const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
+
+  const handleNotifClick = (messageId: number) => {
+    setHighlightedId(messageId);
+    setTimeout(() => {
+      const el = document.getElementById(`message-${messageId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => setHighlightedId(null), 3000);
+    }, 150);
+  };
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const filters = [
-    { id: 'all', label: 'Todas as mensagens' },
-    { id: 'prayer', label: 'Orações' },
-    { id: 'grace', label: 'Graças alcançadas' },
-    { id: 'sin', label: 'Confissões' },
+    { id: "all", label: "Todas as mensagens" },
+    { id: "prayer", label: "Orações" },
+    { id: "grace", label: "Graças alcançadas" },
+    { id: "sin", label: "Confissões" },
   ] as const;
 
   return (
@@ -104,10 +172,10 @@ export default function Dashboard() {
             </div>
             <span className="font-display font-semibold text-xl tracking-tight hidden sm:block">Minha Fé</span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-muted-foreground hidden sm:block">
-              Que a paz esteja com você, {user?.firstName || 'Caminhante'}
+              Que a paz esteja com você, {user?.firstName || "Caminhante"}
             </span>
 
             <Popover onOpenChange={(open) => open && unreadCount > 0 && markReadMutation.mutate()}>
@@ -137,7 +205,7 @@ export default function Dashboard() {
                       <button
                         key={n.id}
                         onClick={() => handleNotifClick(n.messageId)}
-                        className={`w-full text-left p-4 border-b last:border-0 hover:bg-black/5 transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}
+                        className={`w-full text-left p-4 border-b last:border-0 hover:bg-black/5 transition-colors ${!n.isRead ? "bg-primary/5" : ""}`}
                       >
                         <p className="text-sm text-foreground/80">{n.content}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">
@@ -208,7 +276,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <InspiringMessage />
 
-        {/* Unified Filter & Sort Controls */}
+        {/* Filter & Sort */}
         <div className="max-w-2xl mx-auto mb-12 px-2">
           <div className="bg-white/40 backdrop-blur-md p-1.5 rounded-full border border-white/60 shadow-xl shadow-black/5 flex items-center gap-1">
             <div className="flex-[1.5] flex items-center gap-2 pl-4 pr-1 py-1 min-w-0">
@@ -218,7 +286,7 @@ export default function Dashboard() {
                   <SelectValue placeholder="Filtrar" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-none shadow-2xl p-1">
-                  {filters.map(f => (
+                  {filters.map((f) => (
                     <SelectItem key={f.id} value={f.id} className="rounded-xl py-2 text-xs">
                       {f.label}
                     </SelectItem>
@@ -226,7 +294,7 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="w-px h-5 bg-black/5 shrink-0" />
 
             <div className="flex-1 flex items-center gap-2 pl-2 pr-1 py-1 min-w-0">
@@ -249,30 +317,53 @@ export default function Dashboard() {
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
             <p>Recebendo as mensagens...</p>
           </div>
-        ) : sortedMessages && sortedMessages.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedMessages.map((message, idx) => (
-              <div
-                key={message.id}
-                id={`message-${message.id}`}
-                className={`transition-all duration-700 rounded-[2rem] ${highlightedId === message.id ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}`}
-              >
-                <FloatingBubble message={message} index={idx} isAdmin={isAdmin} />
-              </div>
-            ))}
-          </div>
+        ) : sortedMessages.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedMessages.map((message, idx) => (
+                <div
+                  key={message.id}
+                  id={`message-${message.id}`}
+                  className={`transition-all duration-700 rounded-[2rem] ${highlightedId === message.id ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}`}
+                >
+                  <FloatingBubble message={message} index={idx} isAdmin={isAdmin} />
+                </div>
+              ))}
+            </div>
+
+            {/* Sentinel */}
+            <div ref={sentinelRef} className="flex justify-center py-10">
+              {isFetchingNextPage && (
+                <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
+              )}
+              {!hasNextPage && !isFetchingNextPage && sortedMessages.length > PAGE_SIZE && (
+                <p className="text-xs text-muted-foreground">Você chegou ao fim 🕊️</p>
+              )}
+            </div>
+          </>
         ) : (
           <div className="text-center py-20 bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 max-w-2xl mx-auto">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <span className="text-3xl opacity-50">🕊️</span>
             </div>
             <h3 className="text-2xl font-display font-semibold mb-2">O céu está silencioso</h3>
-            <p className="text-muted-foreground">Seja o primeiro a compartilhar uma message de fé.</p>
+            <p className="text-muted-foreground">Seja o primeiro a compartilhar uma mensagem de fé.</p>
           </div>
         )}
       </main>
 
-      {/* Floating Action Button */}
+      {/* Voltar ao topo */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-28 right-8 flex items-center gap-1.5 px-3 py-2 bg-white/80 backdrop-blur-md border border-white/60 shadow-lg rounded-full text-xs font-semibold text-muted-foreground hover:text-primary hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 z-40"
+        >
+          <ArrowUp className="w-3.5 h-3.5" />
+          Voltar ao topo
+        </button>
+      )}
+
+      {/* FAB */}
       <button
         onClick={() => setIsModalOpen(true)}
         className="fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 hover:-translate-y-1 hover:shadow-primary/50 transition-all duration-300 z-40 group"
@@ -280,7 +371,6 @@ export default function Dashboard() {
         <Plus className="w-8 h-8 transition-transform group-hover:rotate-90 duration-300" />
       </button>
 
-      {/* Create Modal */}
       <CreateMessageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
