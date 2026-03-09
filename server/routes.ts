@@ -121,7 +121,7 @@ export async function registerRoutes(
           .json({ message: "Only sins can be pardoned" });
       }
 
-      const updated = await storage.updateMessage(id, { isPardoned: true });
+      const updated = await storage.updateMessage(id, { isPardoned: true, likesCount: msg.likesCount + 1 });
 
       if (msg.authorId) {
         await storage.createNotification({
