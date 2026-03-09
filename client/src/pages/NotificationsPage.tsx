@@ -63,18 +63,19 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 bg-background/50 backdrop-blur-xl border-b border-white/20 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center gap-4">
+      <header className="sticky top-0 z-40 bg-white/60 backdrop-blur-xl border-b border-white shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between">
           <button
             onClick={() => navigate("/")}
-            className="p-2 rounded-full hover:bg-black/5 transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all group"
           >
             <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Voltar</span>
           </button>
-          <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-primary" />
-            <h1 className="font-display font-bold text-lg">Notificações</h1>
-          </div>
+          <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
+            Notificações
+          </h1>
+          <div className="w-20" />
         </div>
       </header>
 
