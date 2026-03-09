@@ -1,11 +1,12 @@
 import { useState, useRef, useMemo } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
 import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { FloatingBubble } from "@/components/FloatingBubble";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { clsx, type ClassValue } from "clsx";
@@ -285,17 +286,17 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* My Contributions - Restored Design */}
-        <section className="space-y-6">
+        {/* My Contributions — Timeline */}
+        <section className="space-y-8">
+          {/* Header */}
           <div className="flex items-center justify-between px-2">
             <h3 className="text-sm font-bold text-foreground/60 uppercase tracking-widest flex items-center gap-2 font-sans">
               Minhas Contribuições
               <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-sans">{messages?.length}</span>
             </h3>
-            
             {messages && messages.length > 0 && (
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={selectAll}
                   className="text-xs font-bold text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all flex items-center gap-2"
                 >
@@ -303,7 +304,7 @@ export default function Profile() {
                   {selectedIds.length === messages.length ? "Nenhum" : "Todos"}
                 </button>
                 {selectedIds.length > 0 && (
-                  <button 
+                  <button
                     onClick={handleDeleteBulk}
                     className="bg-destructive text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-destructive/90 shadow-lg shadow-destructive/20 transition-all active:scale-95"
                   >
@@ -316,27 +317,199 @@ export default function Profile() {
           </div>
 
           {messages && messages.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {messages.map((msg, idx) => (
-                <div key={msg.id} className="relative group">
-                  <div className="absolute top-4 left-4 z-20">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(msg.id);
-                      }}
-                      className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
-                    >
-                      {selectedIds.includes(msg.id) ? (
-                        <CheckSquare className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Square className="w-4 h-4 text-slate-300" />
+            <div className="relative">
+
+              {/* ── MOBILE: linha à esquerda ── */}
+              <div className="absolute left-[22px] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent md:hidden" />
+
+              {/* ── DESKTOP: linha central ── */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-primary/20 to-transparent hidden md:block" />
+
+              <div className="space-y-8">
+                {messages.map((msg, idx) => {
+                  const isLeft = idx % 2 === 0;
+                  const date = new Date(msg.createdAt);
+
+                  const typeConfig: Record<string, { label: string; labelColor: string; dotBg: string; dotRing: string; connectorFrom: string; connectorTo: string }> = {
+                    prayer: {
+                      label: "Oração",
+                      labelColor: "text-amber-600",
+                      dotBg: "bg-amber-400",
+                      dotRing: "ring-amber-100",
+                      connectorFrom: "from-amber-200/60",
+                      connectorTo: "to-transparent",
+                    },
+                    grace: {
+                      label: "Graça Alcançada",
+                      labelColor: "text-blue-500",
+                      dotBg: "bg-blue-400",
+                      dotRing: "ring-blue-100",
+                      connectorFrom: "from-blue-200/60",
+                      connectorTo: "to-transparent",
+                    },
+                    sin: {
+                      label: "Confissão",
+                      labelColor: "text-slate-400",
+                      dotBg: "bg-slate-300",
+                      dotRing: "ring-slate-100",
+                      connectorFrom: "from-slate-200/60",
+                      connectorTo: "to-transparent",
+                    },
+                  };
+                  const cfg = typeConfig[msg.type] ?? typeConfig["prayer"];
+
+                  // Card reutilizável
+                  const CardContent = (
+                    <div className="relative group">
+                      {/* Checkbox */}
+                      <div className="absolute top-3 right-3 z-20">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
+                          className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          {selectedIds.includes(msg.id)
+                            ? <CheckSquare className="w-4 h-4 text-primary" />
+                            : <Square className="w-4 h-4 text-slate-300" />}
+                        </button>
+                      </div>
+                      {selectedIds.includes(msg.id) && (
+                        <div className="absolute top-3 right-3 z-20">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
+                            className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm"
+                          >
+                            <CheckSquare className="w-4 h-4 text-primary" />
+                          </button>
+                        </div>
                       )}
-                    </button>
-                  </div>
-                  <FloatingBubble message={msg} index={idx} isAdmin={isAdmin} />
+                      <div className={`
+                        bg-white/50 backdrop-blur-xl border border-white/70 rounded-[1.5rem] p-5
+                        shadow-[0_4px_24px_rgba(0,0,0,0.04)]
+                        hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]
+                        hover:-translate-y-0.5 transition-all duration-300
+                        ${selectedIds.includes(msg.id) ? "ring-2 ring-primary/30" : ""}
+                      `}>
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${cfg.labelColor}`}>
+                            {cfg.label}
+                          </span>
+                          {msg.isSpecial && (
+                            <span className="text-[9px] font-semibold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">
+                              ✦ Especial
+                            </span>
+                          )}
+                          {msg.isPrivate && (
+                            <span className="text-[9px] font-semibold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
+                              🔒 Privada
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-foreground/75 leading-relaxed line-clamp-4">{msg.content}</p>
+                        <div className="mt-3 pt-3 border-t border-black/[0.04] flex items-center gap-3 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <span className="text-amber-500">🕯</span> {msg.likesCount} {msg.likesCount === 1 ? "oração" : "orações"}
+                          </span>
+                          {msg.isPardoned && (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1">
+                              ✓ Perdoado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, delay: idx * 0.055, ease: "easeOut" }}
+                    >
+                      {/* ── MOBILE layout: linha esquerda, data+card à direita ── */}
+                      <div className="flex items-start gap-0 md:hidden">
+                        {/* Ponto + linha */}
+                        <div className="flex flex-col items-center flex-shrink-0 w-[44px]">
+                          <div className={`w-3 h-3 rounded-full ${cfg.dotBg} ring-4 ${cfg.dotRing} shadow-sm mt-1 z-10`} />
+                        </div>
+                        {/* Data + card */}
+                        <div className="flex-1 pl-2 pb-2">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">
+                              {format(date, "dd MMM", { locale: ptBR })}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground/60">
+                              {format(date, "HH:mm")}
+                            </span>
+                          </div>
+                          {CardContent}
+                        </div>
+                      </div>
+
+                      {/* ── DESKTOP layout: alternado, linha central ── */}
+                      <div className="hidden md:grid md:grid-cols-[1fr_56px_1fr] md:items-start md:gap-0">
+
+                        {/* Coluna esquerda */}
+                        <div className="pr-6">
+                          {isLeft ? (
+                            <div className="relative">
+                              {CardContent}
+                              {/* Conector → ponto */}
+                              <div className={`absolute top-6 -right-6 w-6 h-px bg-gradient-to-r ${cfg.connectorFrom} ${cfg.connectorTo}`} />
+                            </div>
+                          ) : (
+                            /* Data alinhada à direita quando card está na direita */
+                            <div className="flex flex-col items-end pt-4 pr-1">
+                              <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">
+                                {format(date, "dd MMM", { locale: ptBR })}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground/60">
+                                {format(date, "HH:mm")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Ponto central */}
+                        <div className="flex flex-col items-center pt-4 z-10">
+                          <div className={`w-3.5 h-3.5 rounded-full ${cfg.dotBg} ring-4 ${cfg.dotRing} shadow-sm`} />
+                        </div>
+
+                        {/* Coluna direita */}
+                        <div className="pl-6">
+                          {!isLeft ? (
+                            <div className="relative">
+                              {/* Conector ponto → */}
+                              <div className={`absolute top-6 -left-6 w-6 h-px bg-gradient-to-l ${cfg.connectorFrom} ${cfg.connectorTo}`} />
+                              {CardContent}
+                            </div>
+                          ) : (
+                            /* Data alinhada à esquerda quando card está na esquerda */
+                            <div className="flex flex-col items-start pt-4 pl-1">
+                              <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">
+                                {format(date, "dd MMM", { locale: ptBR })}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground/60">
+                                {format(date, "HH:mm")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Fim da linha */}
+              <div className="flex md:justify-center justify-start pl-[18px] md:pl-0 mt-8">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground/50">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/20" />
+                  <span>início da sua jornada</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/20" />
                 </div>
-              ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12 bg-white/20 rounded-3xl border border-dashed border-slate-200">
