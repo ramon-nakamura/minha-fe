@@ -47,7 +47,15 @@ export default function Profile() {
   const pardonMutation = usePardonMessage();
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [showReflection, setShowReflection] = useState(false);
+  const [reflectionPhase, setReflectionPhase] = useState<"idle" | "animating" | "open">("idle");
+
+  const openReflection = () => {
+    setReflectionPhase("animating");
+    setTimeout(() => setReflectionPhase("open"), 2200);
+  };
+  const closeReflection = () => {
+    setReflectionPhase("idle");
+  };
 
   const verses = [
     {
@@ -280,7 +288,7 @@ export default function Profile() {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             <button 
-              onClick={() => setShowReflection(true)}
+              onClick={() => openReflection()}
               className="px-6 py-2.5 rounded-full bg-white border border-black/5 text-slate-700 font-bold text-sm flex items-center gap-2 hover:bg-primary/5 transition-all shadow-sm"
             >
               <Sparkles className="w-4 h-4 text-primary" />
@@ -636,16 +644,151 @@ export default function Profile() {
         </section>
       </main>
 
-      {showReflection && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl relative">
-            <button onClick={() => setShowReflection(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 text-slate-400"><X className="w-5 h-5" /></button>
-            <div className="space-y-4 text-center">
-              <h3 className="text-xl font-display font-bold text-slate-900">Reflexão</h3>
-              <p className="text-slate-600 leading-relaxed font-medium">{verseOfDay.reflection}</p>
-              <button onClick={() => setShowReflection(false)} className="w-full mt-4 py-3 rounded-2xl bg-primary text-white font-bold">Amém</button>
-            </div>
-          </div>
+      {/* Animação + Modal de Reflexão */}
+      {reflectionPhase !== "idle" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+
+          {/* Camada de fundo — escurece suavemente */}
+          <motion.div
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ background: "radial-gradient(ellipse at 50% 40%, #1a1035 0%, #0d0820 100%)" }}
+            transition={{ duration: 0.8, ease: "easeIn" }}
+          />
+
+          {/* Luz central divina */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: reflectionPhase === "open" ? 0 : [0, 0.7, 0.5] }}
+            transition={{ duration: 1.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+            style={{
+              background: "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(253,230,138,0.18) 0%, rgba(217,119,6,0.08) 50%, transparent 100%)"
+            }}
+          />
+
+          {/* Nuvens SVG flutuando */}
+          {[
+            { x: "-120%", y: "10%",  scale: 1.1, delay: 0,    dur: 1.6, opacity: 0.13 },
+            { x: "120%",  y: "25%",  scale: 0.8, delay: 0.15, dur: 1.7, opacity: 0.10 },
+            { x: "-100%", y: "55%",  scale: 0.9, delay: 0.05, dur: 1.5, opacity: 0.09 },
+            { x: "100%",  y: "65%",  scale: 1.2, delay: 0.2,  dur: 1.8, opacity: 0.11 },
+            { x: "-80%",  y: "40%",  scale: 0.7, delay: 0.3,  dur: 1.4, opacity: 0.08 },
+            { x: "80%",   y: "45%",  scale: 1.0, delay: 0.1,  dur: 1.6, opacity: 0.10 },
+          ].map((c, i) => (
+            <motion.div
+              key={i}
+              className="absolute pointer-events-none"
+              style={{ left: "50%", top: c.y, translateX: "-50%" }}
+              initial={{ x: c.x, opacity: 0, scale: c.scale * 0.8 }}
+              animate={reflectionPhase === "open"
+                ? { x: c.x, opacity: 0, scale: c.scale * 0.6 }
+                : { x: "0%", opacity: c.opacity, scale: c.scale }
+              }
+              transition={{ duration: c.dur, delay: c.delay, ease: "easeOut" }}
+            >
+              <svg width="420" height="120" viewBox="0 0 420 120" fill="none">
+                <ellipse cx="210" cy="80" rx="200" ry="55" fill="white" />
+                <ellipse cx="130" cy="65" rx="110" ry="60" fill="white" />
+                <ellipse cx="290" cy="60" rx="90" ry="55" fill="white" />
+                <ellipse cx="210" cy="50" rx="80" ry="50" fill="white" />
+                <ellipse cx="160" cy="42" rx="60" ry="44" fill="white" />
+                <ellipse cx="255" cy="38" rx="55" ry="42" fill="white" />
+              </svg>
+            </motion.div>
+          ))}
+
+          {/* Partículas de luz */}
+          {Array.from({ length: 12 }).map((_, i) => (
+            <motion.div
+              key={`p-${i}`}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: Math.random() * 3 + 1.5,
+                height: Math.random() * 3 + 1.5,
+                left: `${20 + Math.random() * 60}%`,
+                top: `${15 + Math.random() * 60}%`,
+                background: i % 3 === 0 ? "#fde68a" : i % 3 === 1 ? "#fff" : "#fbbf24",
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={reflectionPhase === "open"
+                ? { opacity: 0, scale: 0 }
+                : { opacity: [0, 0.9, 0], scale: [0, 1, 0.5] }
+              }
+              transition={{ duration: 1.2 + Math.random() * 0.8, delay: 0.4 + Math.random() * 0.6, ease: "easeInOut" }}
+            />
+          ))}
+
+          {/* Modal de reflexão — surge após a animação */}
+          <AnimatePresence>
+            {reflectionPhase === "open" && (
+              <motion.div
+                className="relative w-full max-w-md"
+                initial={{ opacity: 0, scale: 0.92, y: 24 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div
+                  className="rounded-[2.5rem] p-8 relative overflow-hidden shadow-2xl"
+                  style={{ background: "linear-gradient(145deg, #fffdf7 0%, #fef9ec 60%, #fffbf0 100%)" }}
+                >
+                  {/* Brilho interno sutil */}
+                  <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none" style={{
+                    background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(253,230,138,0.25) 0%, transparent 70%)"
+                  }} />
+
+                  <button
+                    onClick={closeReflection}
+                    className="absolute top-6 right-6 p-2 rounded-full hover:bg-amber-50 text-slate-400 transition-colors z-10"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="space-y-5 text-center relative z-10">
+                    {/* Ícone */}
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.15, duration: 0.4, ease: "backOut" }}
+                      className="w-12 h-12 mx-auto rounded-full bg-amber-100 flex items-center justify-center"
+                    >
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </motion.div>
+
+                    <motion.h3
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                      className="text-xl font-display font-bold text-slate-900"
+                    >
+                      Reflexão
+                    </motion.h3>
+
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.45 }}
+                      className="text-slate-600 leading-relaxed font-medium text-[15px]"
+                    >
+                      {verseOfDay.reflection}
+                    </motion.p>
+
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.42, duration: 0.4 }}
+                      onClick={closeReflection}
+                      className="w-full mt-2 py-3 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                    >
+                      Amém
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>
