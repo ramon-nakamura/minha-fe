@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff } from "lucide-react";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff, Heart } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -327,93 +328,147 @@ export default function Profile() {
 
               <div className="space-y-8">
                 {messages.map((msg, idx) => {
+                  const isPrayer = msg.type === "prayer";
+                  const isGrace = msg.type === "grace";
+                  const isSin = msg.type === "sin";
+
+                  // Cores do ponto na linha para cada tipo
+                  const dotCfg = {
+                    prayer: { dotBg: "bg-amber-400", dotRing: "ring-amber-100", connectorFrom: "from-amber-200/60" },
+                    grace:  { dotBg: "bg-blue-400",  dotRing: "ring-blue-100",  connectorFrom: "from-blue-200/60"  },
+                    sin:    { dotBg: "bg-slate-300",  dotRing: "ring-slate-100", connectorFrom: "from-slate-200/60" },
+                  }[msg.type] ?? { dotBg: "bg-primary", dotRing: "ring-primary/20", connectorFrom: "from-primary/20" };
+
                   const isLeft = idx % 2 === 0;
                   const date = new Date(msg.createdAt);
 
-                  const typeConfig: Record<string, { label: string; labelColor: string; dotBg: string; dotRing: string; connectorFrom: string; connectorTo: string }> = {
-                    prayer: {
-                      label: "Oração",
-                      labelColor: "text-amber-600",
-                      dotBg: "bg-amber-400",
-                      dotRing: "ring-amber-100",
-                      connectorFrom: "from-amber-200/60",
-                      connectorTo: "to-transparent",
-                    },
-                    grace: {
-                      label: "Graça Alcançada",
-                      labelColor: "text-blue-500",
-                      dotBg: "bg-blue-400",
-                      dotRing: "ring-blue-100",
-                      connectorFrom: "from-blue-200/60",
-                      connectorTo: "to-transparent",
-                    },
-                    sin: {
-                      label: "Confissão",
-                      labelColor: "text-slate-400",
-                      dotBg: "bg-slate-300",
-                      dotRing: "ring-slate-100",
-                      connectorFrom: "from-slate-200/60",
-                      connectorTo: "to-transparent",
-                    },
-                  };
-                  const cfg = typeConfig[msg.type] ?? typeConfig["prayer"];
+                  // Card fiel ao FloatingBubble em escala reduzida
+                  const isPrayer = msg.type === "prayer";
+                  const isGrace = msg.type === "grace";
+                  const isSin = msg.type === "sin";
 
-                  // Card reutilizável
                   const CardContent = (
                     <div className="relative group">
-                      {/* Checkbox */}
-                      <div className="absolute top-3 right-3 z-20">
+                      {/* Checkbox — visível no hover ou quando selecionado */}
+                      <div className={`absolute top-3 right-3 z-20 transition-opacity ${selectedIds.includes(msg.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
-                          className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                          className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
                         >
                           {selectedIds.includes(msg.id)
-                            ? <CheckSquare className="w-4 h-4 text-primary" />
-                            : <Square className="w-4 h-4 text-slate-300" />}
+                            ? <CheckSquare className="w-3.5 h-3.5 text-primary" />
+                            : <Square className="w-3.5 h-3.5 text-slate-300" />}
                         </button>
                       </div>
-                      {selectedIds.includes(msg.id) && (
-                        <div className="absolute top-3 right-3 z-20">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
-                            className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm"
-                          >
-                            <CheckSquare className="w-4 h-4 text-primary" />
-                          </button>
-                        </div>
-                      )}
-                      <div className={`
-                        bg-white/50 backdrop-blur-xl border border-white/70 rounded-[1.5rem] p-5
-                        shadow-[0_4px_24px_rgba(0,0,0,0.04)]
-                        hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]
-                        hover:-translate-y-0.5 transition-all duration-300
+
+                      {/* Wrapper com borda animada para especial */}
+                      <div className={`relative rounded-[1.5rem] overflow-hidden transition-all duration-500
+                        ${msg.isSpecial ? "" : "bg-white/50 backdrop-blur-xl border border-white/70 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.07)] hover:-translate-y-0.5"}
                         ${selectedIds.includes(msg.id) ? "ring-2 ring-primary/30" : ""}
                       `}>
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${cfg.labelColor}`}>
-                            {cfg.label}
-                          </span>
-                          {msg.isSpecial && (
-                            <span className="text-[9px] font-semibold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">
-                              ✦ Especial
-                            </span>
-                          )}
-                          {msg.isPrivate && (
-                            <span className="text-[9px] font-semibold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
-                              🔒 Privada
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-foreground/75 leading-relaxed line-clamp-4">{msg.content}</p>
-                        <div className="mt-3 pt-3 border-t border-black/[0.04] flex items-center gap-3 text-[11px] text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <span className="text-amber-500">🕯</span> {msg.likesCount} {msg.likesCount === 1 ? "oração" : "orações"}
-                          </span>
-                          {msg.isPardoned && (
-                            <span className="text-emerald-500 font-medium flex items-center gap-1">
-                              ✓ Perdoado
-                            </span>
-                          )}
+                        {/* Borda animada dourada para especial */}
+                        {msg.isSpecial && (
+                          <>
+                            <div className="absolute inset-0 rounded-[1.5rem] z-0 pointer-events-none" style={{
+                              padding: "1.5px",
+                              background: "linear-gradient(var(--angle, 0deg), #f5e27a, #c8973a, #f0d060, #a87830, #f5e27a)",
+                              WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                              WebkitMaskComposite: "xor",
+                              maskComposite: "exclude",
+                              animation: "spin-border 3s linear infinite",
+                            }} />
+                            <div className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0 pointer-events-none"
+                              style={{ background: "linear-gradient(135deg, #fffdf5 0%, #fdf8e8 50%, #fffef7 100%)" }} />
+                          </>
+                        )}
+
+                        {/* Glow de fundo */}
+                        <div className={`absolute -top-8 -right-8 w-24 h-24 blur-3xl rounded-full pointer-events-none
+                          ${isPrayer && !msg.isSpecial ? "opacity-25 bg-amber-400" : ""}
+                          ${isPrayer && msg.isSpecial ? "opacity-35 bg-yellow-300" : ""}
+                          ${isGrace ? "opacity-25 bg-blue-400" : ""}
+                          ${isSin ? "opacity-20 bg-slate-400" : ""}
+                        `} />
+
+                        <div className="relative z-10 p-4">
+                          {/* Header: avatar + nome + badge */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2.5">
+                              {/* Avatar */}
+                              <div className="relative">
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-inner overflow-hidden
+                                  ${isPrayer ? "bg-amber-100/80 text-amber-600" : ""}
+                                  ${isGrace ? "bg-blue-100/80 text-blue-600" : ""}
+                                  ${isSin ? "bg-slate-200/80 text-slate-600" : ""}
+                                `}>
+                                  {isSin ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : msg.authorImage ? (
+                                    <img src={msg.authorImage} alt="" className="w-full h-full object-cover" />
+                                  ) : isPrayer ? (
+                                    <CandleIcon className="w-4 h-4" />
+                                  ) : (
+                                    <HandHeart className="w-4 h-4" />
+                                  )}
+                                </div>
+                                {/* Badge mini no avatar */}
+                                {!isSin && (
+                                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center shadow-sm
+                                    ${isPrayer ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-blue-600"}
+                                  `}>
+                                    {isPrayer ? <CandleIcon className="w-2 h-2" /> : <HandHeart className="w-2 h-2" />}
+                                  </div>
+                                )}
+                              </div>
+                              {/* Nome e tempo */}
+                              <div>
+                                <p className="text-xs font-semibold text-foreground/90 leading-tight">
+                                  {isSin ? "Anônimo" : (msg as any).authorName || "Caminhante da Fé"}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                                  {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true, locale: ptBR })}
+                                </p>
+                              </div>
+                            </div>
+                            {/* Badge tipo */}
+                            <div className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-white/50 border-white text-muted-foreground whitespace-nowrap">
+                              {isPrayer && (msg.isSpecial ? "Especial" : "Oração")}
+                              {isGrace && "Graça"}
+                              {isSin && "Confissão"}
+                            </div>
+                          </div>
+
+                          {/* Conteúdo */}
+                          <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3 font-medium mb-3">
+                            {msg.content}
+                          </p>
+
+                          {/* Botão de ação */}
+                          <div className="flex items-center justify-between">
+                            <button
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 active:scale-95
+                                ${(isPrayer || isGrace) && (msg.likesCount > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:bg-primary/10 hover:text-primary")}
+                                ${isSin && msg.isPardoned ? "bg-green-100 text-green-700 cursor-default" : isSin ? "text-muted-foreground/60 hover:bg-green-50 hover:text-green-600" : ""}
+                              `}
+                            >
+                              {isPrayer ? (
+                                <>
+                                  <CandleIcon className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? "fill-current" : ""}`} />
+                                  <span>{msg.likesCount > 0 ? `${msg.likesCount} orando` : "Orar"}</span>
+                                </>
+                              ) : isGrace ? (
+                                <>
+                                  <Heart className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? "fill-current" : ""}`} />
+                                  <span>{msg.likesCount > 0 ? msg.likesCount : "Amém"}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className={`w-3.5 h-3.5 ${msg.isPardoned ? "fill-current text-green-600" : ""}`} />
+                                  <span>{msg.isPardoned ? "Perdoado" : "Perdoar"}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -430,7 +485,7 @@ export default function Profile() {
                       <div className="flex items-start gap-0 md:hidden">
                         {/* Ponto + linha */}
                         <div className="flex flex-col items-center flex-shrink-0 w-[44px]">
-                          <div className={`w-3 h-3 rounded-full ${cfg.dotBg} ring-4 ${cfg.dotRing} shadow-sm mt-1 z-10`} />
+                          <div className={`w-3 h-3 rounded-full ${dotCfg.dotBg} ring-4 ${dotCfg.dotRing} shadow-sm mt-1 z-10`} />
                         </div>
                         {/* Data + card */}
                         <div className="flex-1 pl-2 pb-2">
@@ -455,7 +510,7 @@ export default function Profile() {
                             <div className="relative">
                               {CardContent}
                               {/* Conector → ponto */}
-                              <div className={`absolute top-6 -right-6 w-6 h-px bg-gradient-to-r ${cfg.connectorFrom} ${cfg.connectorTo}`} />
+                              <div className={`absolute top-6 -right-6 w-6 h-px bg-gradient-to-r ${dotCfg.connectorFrom} to-transparent`} />
                             </div>
                           ) : (
                             /* Data alinhada à direita quando card está na direita */
@@ -472,7 +527,7 @@ export default function Profile() {
 
                         {/* Ponto central */}
                         <div className="flex flex-col items-center pt-4 z-10">
-                          <div className={`w-3.5 h-3.5 rounded-full ${cfg.dotBg} ring-4 ${cfg.dotRing} shadow-sm`} />
+                          <div className={`w-3.5 h-3.5 rounded-full ${dotCfg.dotBg} ring-4 ${dotCfg.dotRing} shadow-sm`} />
                         </div>
 
                         {/* Coluna direita */}
@@ -480,7 +535,7 @@ export default function Profile() {
                           {!isLeft ? (
                             <div className="relative">
                               {/* Conector ponto → */}
-                              <div className={`absolute top-6 -left-6 w-6 h-px bg-gradient-to-l ${cfg.connectorFrom} ${cfg.connectorTo}`} />
+                              <div className={`absolute top-6 -left-6 w-6 h-px bg-gradient-to-l ${dotCfg.connectorFrom} to-transparent`} />
                               {CardContent}
                             </div>
                           ) : (
