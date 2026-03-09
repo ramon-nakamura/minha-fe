@@ -1,12 +1,11 @@
 import { useState, useRef, useMemo } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
 import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { FloatingBubble } from "@/components/FloatingBubble";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { clsx, type ClassValue } from "clsx";
@@ -286,17 +285,17 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* My Contributions — Timeline */}
-        <section className="space-y-8">
-          {/* Header */}
+        {/* My Contributions - Restored Design */}
+        <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-sm font-bold text-foreground/60 uppercase tracking-widest flex items-center gap-2 font-sans">
               Minhas Contribuições
               <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-sans">{messages?.length}</span>
             </h3>
+            
             {messages && messages.length > 0 && (
               <div className="flex items-center gap-4">
-                <button
+                <button 
                   onClick={selectAll}
                   className="text-xs font-bold text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all flex items-center gap-2"
                 >
@@ -304,7 +303,7 @@ export default function Profile() {
                   {selectedIds.length === messages.length ? "Nenhum" : "Todos"}
                 </button>
                 {selectedIds.length > 0 && (
-                  <button
+                  <button 
                     onClick={handleDeleteBulk}
                     className="bg-destructive text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-destructive/90 shadow-lg shadow-destructive/20 transition-all active:scale-95"
                   >
@@ -317,121 +316,27 @@ export default function Profile() {
           </div>
 
           {messages && messages.length > 0 ? (
-            <div className="relative">
-              {/* Linha vertical central */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
-
-              <div className="space-y-10">
-                {messages.map((msg, idx) => {
-                  const isLeft = idx % 2 === 0;
-                  const date = new Date(msg.createdAt);
-                  const typeConfig = {
-                    prayer: { label: "Oração", color: "text-amber-600", dot: "bg-amber-400", ring: "ring-amber-200" },
-                    grace:  { label: "Graça",  color: "text-blue-600",  dot: "bg-blue-400",  ring: "ring-blue-200"  },
-                    sin:    { label: "Confissão", color: "text-slate-500", dot: "bg-slate-400", ring: "ring-slate-200" },
-                  }[msg.type] ?? { label: msg.type, color: "text-primary", dot: "bg-primary", ring: "ring-primary/20" };
-
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: idx * 0.06, ease: "easeOut" }}
-                      className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-0"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {messages.map((msg, idx) => (
+                <div key={msg.id} className="relative group">
+                  <div className="absolute top-4 left-4 z-20">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(msg.id);
+                      }}
+                      className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
                     >
-                      {/* Coluna esquerda */}
-                      <div className={isLeft ? "pr-8" : ""}>
-                        {isLeft && (
-                          <div className="relative group">
-                            {/* Checkbox */}
-                            <div className="absolute top-3 right-3 z-20">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
-                                className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
-                              >
-                                {selectedIds.includes(msg.id)
-                                  ? <CheckSquare className="w-4 h-4 text-primary" />
-                                  : <Square className="w-4 h-4 text-slate-300" />}
-                              </button>
-                            </div>
-                            {/* Card */}
-                            <div className="bg-white/50 backdrop-blur-xl border border-white/70 rounded-[1.5rem] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className={`text-[10px] font-bold uppercase tracking-widest ${typeConfig.color}`}>{typeConfig.label}</span>
-                                {msg.isSpecial && <span className="text-[9px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">✦ Especial</span>}
-                                {msg.isPrivate && <span className="text-[9px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-200">🔒 Privada</span>}
-                              </div>
-                              <p className="text-sm text-foreground/80 leading-relaxed line-clamp-4">{msg.content}</p>
-                              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-                                <span>🕯 {msg.likesCount}</span>
-                                {msg.isPardoned && <span className="text-green-500">✓ Perdoado</span>}
-                              </div>
-                            </div>
-                            {/* Conector horizontal */}
-                            <div className="absolute top-1/2 -right-8 w-8 h-px bg-gradient-to-r from-primary/30 to-primary/10 -translate-y-1/2" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Ponto central + data */}
-                      <div className="flex flex-col items-center gap-1.5 z-10">
-                        <div className={`w-3.5 h-3.5 rounded-full ${typeConfig.dot} ring-4 ${typeConfig.ring} shadow-sm`} />
-                        <div className="flex flex-col items-center">
-                          <span className="text-[9px] font-bold text-foreground/50 uppercase tracking-wider whitespace-nowrap">
-                            {format(date, "dd MMM", { locale: ptBR })}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                            {format(date, "HH:mm")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Coluna direita */}
-                      <div className={!isLeft ? "pl-8" : ""}>
-                        {!isLeft && (
-                          <div className="relative group">
-                            {/* Checkbox */}
-                            <div className="absolute top-3 left-3 z-20">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleSelect(msg.id); }}
-                                className="p-1 rounded-lg bg-white/80 backdrop-blur-sm border border-black/5 shadow-sm hover:scale-110 transition-all"
-                              >
-                                {selectedIds.includes(msg.id)
-                                  ? <CheckSquare className="w-4 h-4 text-primary" />
-                                  : <Square className="w-4 h-4 text-slate-300" />}
-                              </button>
-                            </div>
-                            {/* Conector horizontal */}
-                            <div className="absolute top-1/2 -left-8 w-8 h-px bg-gradient-to-l from-primary/30 to-primary/10 -translate-y-1/2" />
-                            {/* Card */}
-                            <div className="bg-white/50 backdrop-blur-xl border border-white/70 rounded-[1.5rem] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className={`text-[10px] font-bold uppercase tracking-widest ${typeConfig.color}`}>{typeConfig.label}</span>
-                                {msg.isSpecial && <span className="text-[9px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">✦ Especial</span>}
-                                {msg.isPrivate && <span className="text-[9px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-200">🔒 Privada</span>}
-                              </div>
-                              <p className="text-sm text-foreground/80 leading-relaxed line-clamp-4">{msg.content}</p>
-                              <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
-                                <span>🕯 {msg.likesCount}</span>
-                                {msg.isPardoned && <span className="text-green-500">✓ Perdoado</span>}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {/* Fim da linha */}
-              <div className="flex justify-center mt-8">
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
-                  <span>início da sua jornada</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
+                      {selectedIds.includes(msg.id) ? (
+                        <CheckSquare className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Square className="w-4 h-4 text-slate-300" />
+                      )}
+                    </button>
+                  </div>
+                  <FloatingBubble message={msg} index={idx} isAdmin={isAdmin} />
                 </div>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-12 bg-white/20 rounded-3xl border border-dashed border-slate-200">
