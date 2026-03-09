@@ -34,7 +34,6 @@ function CandleIcon({ className }: { className?: string }) {
   );
 }
 
-
 // ── Partículas ─────────────────────────────────────────────────────────────
 interface Particle {
   id: number;
@@ -101,9 +100,10 @@ interface FloatingBubbleProps {
   message: FaithMessage;
   index: number;
   isAdmin?: boolean;
+  currentUserId?: string;
 }
 
-export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps) {
+export function FloatingBubble({ message, index, isAdmin, currentUserId }: FloatingBubbleProps) {
   const likeMutation = useLikeMessage();
   const pardonMutation = usePardonMessage();
   const deleteMutation = useDeleteMessage();
@@ -126,6 +126,7 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
   const isGrace = message.type === 'grace';
   const isSin = message.type === 'sin';
   const isSpecial = message.isSpecial;
+  const isOwnCard = !!currentUserId && message.authorId === currentUserId;
 
   const prayerColors = isSpecial
     ? ["#f5c842", "#f0a020", "#fde68a", "#d97706", "#fff8a0"]
@@ -159,6 +160,30 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
       setIsEditing(false);
     }
   };
+
+  // Labels dos botões de interação
+  const actionLabel = (() => {
+    if (isPrayer) {
+      if (message.likesCount === 0) return "Orar";
+      return isOwnCard
+        ? `${message.likesCount} orando com você`
+        : `${message.likesCount} orando pela causa`;
+    }
+    if (isGrace) {
+      if (message.likesCount === 0) return "Amém";
+      return isOwnCard
+        ? `${message.likesCount} comemorando com você`
+        : `${message.likesCount} comemorando a graça recebida`;
+    }
+    // sin
+    if (message.isPardoned) {
+      const count = message.likesCount;
+      return isOwnCard
+        ? `${count > 0 ? count + " " : ""}perdoaram você`
+        : `${count > 0 ? count + " " : ""}perdoaram`;
+    }
+    return "Perdoar";
+  })();
 
   return (
     <div className="masonry-item">
@@ -317,19 +342,17 @@ export function FloatingBubble({ message, index, isAdmin }: FloatingBubbleProps)
             {isPrayer ? (
               <>
                 <CandleIcon className={cn("w-4 h-4 pointer-events-none", message.likesCount > 0 && "fill-current")} />
-                <span className="pointer-events-none text-xs">
-                  {message.likesCount > 0 ? `${message.likesCount} orando` : "Orar"}
-                </span>
+                <span className="pointer-events-none text-xs">{actionLabel}</span>
               </>
             ) : isGrace ? (
               <>
                 <Heart className={cn("w-4 h-4 pointer-events-none", message.likesCount > 0 && "fill-current")} />
-                <span className="pointer-events-none text-xs">{message.likesCount > 0 ? message.likesCount : "Amém"}</span>
+                <span className="pointer-events-none text-xs">{actionLabel}</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className={cn("w-4 h-4 pointer-events-none", message.isPardoned && "fill-current")} />
-                <span className="pointer-events-none text-xs">{message.isPardoned ? "Perdoado" : "Perdoar"}</span>
+                <span className="pointer-events-none text-xs">{actionLabel}</span>
               </>
             )}
           </button>
