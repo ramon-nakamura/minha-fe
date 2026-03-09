@@ -2,8 +2,8 @@ import { useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
-import { useMessages, useDeleteMessage, useDeleteMessages } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, CheckCircle2, HandHeart, EyeOff, Heart } from "lucide-react";
+import { useMessages, useDeleteMessage, useDeleteMessages, useLikeMessage, usePardonMessage } from "@/hooks/use-messages";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, HeartHandshake, HandHeart, EyeOff, Heart } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,8 @@ export default function Profile() {
   const { data: messages, isLoading } = useMessages({ authorId: user?.id });
   const deleteMutation = useDeleteMessage();
   const deleteBulkMutation = useDeleteMessages();
+  const likeMutation = useLikeMessage();
+  const pardonMutation = usePardonMessage();
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showReflection, setShowReflection] = useState(false);
@@ -441,25 +443,42 @@ export default function Profile() {
                           {/* Botão de ação */}
                           <div className="flex items-center justify-between">
                             <button
+                              onClick={() => {
+                                if (isPrayer || isGrace) likeMutation.mutate(msg.id);
+                                else if (isSin) pardonMutation.mutate(msg.id);
+                              }}
+                              disabled={likeMutation.isPending || pardonMutation.isPending}
                               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 active:scale-95
                                 ${(isPrayer || isGrace) && (msg.likesCount > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground/60 hover:bg-primary/10 hover:text-primary")}
-                                ${isSin && msg.isPardoned ? "bg-green-100 text-green-700 cursor-default" : isSin ? "text-muted-foreground/60 hover:bg-green-50 hover:text-green-600" : ""}
+                                ${isSin && (msg.likesCount > 0 ? "bg-green-100 text-green-700" : "text-muted-foreground/60 hover:bg-green-50 hover:text-green-600")}
                               `}
                             >
                               {isPrayer ? (
                                 <>
                                   <CandleIcon className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? "fill-current" : ""}`} />
-                                  <span>{msg.likesCount > 0 ? `${msg.likesCount} orando` : "Orar"}</span>
+                                  <span>
+                                    {msg.likesCount === 0
+                                      ? "Orar"
+                                      : `${msg.likesCount} orando com você`}
+                                  </span>
                                 </>
                               ) : isGrace ? (
                                 <>
                                   <Heart className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? "fill-current" : ""}`} />
-                                  <span>{msg.likesCount > 0 ? msg.likesCount : "Amém"}</span>
+                                  <span>
+                                    {msg.likesCount === 0
+                                      ? "Amém"
+                                      : `${msg.likesCount} comemorando com você`}
+                                  </span>
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle2 className={`w-3.5 h-3.5 ${msg.isPardoned ? "fill-current text-green-600" : ""}`} />
-                                  <span>{msg.isPardoned ? "Perdoado" : "Perdoar"}</span>
+                                  <HeartHandshake className={`w-3.5 h-3.5 ${msg.likesCount > 0 ? "fill-current" : ""}`} />
+                                  <span>
+                                    {msg.likesCount === 0
+                                      ? "Perdoar"
+                                      : `${msg.likesCount} ${msg.likesCount === 1 ? "perdão recebido" : "perdões recebidos"}`}
+                                  </span>
                                 </>
                               )}
                             </button>
