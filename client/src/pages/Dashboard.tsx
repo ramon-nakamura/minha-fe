@@ -375,16 +375,40 @@ export default function Dashboard() {
       {/* Balão primeiro acesso */}
       {showFirstVisitTip && (
         <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+          initial={{ opacity: 0, y: 10, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.95 }}
-          transition={{ delay: 1.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed bottom-28 right-6 z-40 flex flex-col items-end gap-1 pointer-events-none"
+          transition={{ delay: 1.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed z-40 pointer-events-none"
+          style={{ bottom: "108px", right: "16px" }}
         >
-          <div className="bg-slate-900 text-white text-xs font-medium px-3.5 py-2.5 rounded-2xl rounded-br-sm shadow-xl max-w-[200px] text-right leading-snug">
-            Entre aqui e escreva a sua primeira mensagem!
+          {/* Balão */}
+          <div className="relative flex items-center gap-2.5 pl-3.5 pr-4 py-3 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.75)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.9)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.06), 0 2px 8px rgba(217,119,6,0.08)",
+            }}
+          >
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+            </div>
+            <p className="text-[12.5px] font-semibold text-slate-700 leading-snug whitespace-nowrap">
+              Escreva sua primeira mensagem!
+            </p>
           </div>
-          <div className="w-3 h-3 bg-slate-900 mr-5" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%)" }} />
+          {/* Seta apontando para o FAB */}
+          <div className="absolute -bottom-[7px] right-8"
+            style={{
+              width: 14, height: 8,
+              background: "rgba(255,255,255,0.75)",
+              clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+              filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.04))",
+            }}
+          />
         </motion.div>
       )}
 
