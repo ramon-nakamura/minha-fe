@@ -90,7 +90,13 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
         } else {
           toast({
             title: "Mensagem enviada",
-            description: isPrivate ? "Sua mensagem foi salva privadamente no seu perfil." : "Sua mensagem foi compartilhada na comunidade.",
+            description: isPrivate
+              ? type === "prayer"
+                ? "Sua oração foi salva em Minha Jornada. Ela é visível apenas para você."
+                : type === "grace"
+                  ? "Sua graça foi salva em Minha Jornada. Ela é visível apenas para você."
+                  : "Sua confissão foi salva em Minha Jornada. Ela é visível apenas para você."
+              : "Sua mensagem foi compartilhada com a comunidade.",
           });
         }
         setContent("");
@@ -185,7 +191,12 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 flex items-center justify-between gap-4"
+                      className={cn(
+                        "p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all duration-300",
+                        isPrivate
+                          ? "bg-slate-50/50 border-slate-100 opacity-40 pointer-events-none select-none"
+                          : "bg-amber-50/50 border-amber-100"
+                      )}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full transition-colors ${wantsSpecial ? 'bg-amber-400 text-white shadow-lg shadow-amber-200' : 'bg-amber-100 text-amber-600'}`}>
@@ -196,7 +207,7 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
                             Vela Especial
                           </Label>
                           <span className="text-[10px] text-amber-700/60 uppercase tracking-widest font-bold">
-                            {wantsSpecial ? "Será cobrado R$ 1,99" : "Destaque sua oração"}
+                            {isPrivate ? "Indisponível para mensagens privadas" : wantsSpecial ? "Será cobrado R$ 1,99" : "Destaque sua oração"}
                           </span>
                         </div>
                       </div>
@@ -233,7 +244,7 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
                   <Switch 
                     id="private-message" 
                     checked={isPrivate} 
-                    onCheckedChange={setIsPrivate}
+                    onCheckedChange={(val) => { setIsPrivate(val); if (val) setWantsSpecial(false); }}
                     className="data-[state=checked]:bg-primary"
                   />
                 </div>
