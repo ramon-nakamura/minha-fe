@@ -194,7 +194,7 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
                       className={cn(
                         "p-4 rounded-2xl border flex items-center justify-between gap-4 transition-all duration-300",
                         isPrivate
-                          ? "bg-slate-50/50 border-slate-100 opacity-40 pointer-events-none select-none"
+                          ? "bg-slate-50/50 border-slate-200 opacity-40 pointer-events-none select-none grayscale"
                           : "bg-amber-50/50 border-amber-100"
                       )}
                     >
@@ -207,7 +207,7 @@ export function CreateMessageModal({ isOpen, onClose }: CreateMessageModalProps)
                             Vela Especial
                           </Label>
                           <span className="text-[10px] text-amber-700/60 uppercase tracking-widest font-bold">
-                            {isPrivate ? "Indisponível para mensagens privadas" : wantsSpecial ? "Será cobrado R$ 1,99" : "Destaque sua oração"}
+                            {isPrivate ? "Indisponível" : wantsSpecial ? "Será cobrado R$ 1,99" : "Destaque sua oração"}
                           </span>
                         </div>
                       </div>
