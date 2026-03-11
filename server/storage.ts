@@ -26,6 +26,7 @@ export interface IStorage {
   getPaymentBySessionId(sessionId: string): Promise<Payment | undefined>;
   updatePaymentStatus(id: number, status: string): Promise<Payment>;
   getAllMessages(): Promise<Message[]>;
+  getTopMessages(limit: number): Promise<Message[]>;
   anonymizeUserMessages(userId: string): Promise<void>;
 }
 
@@ -89,6 +90,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAllMessages(): Promise<Message[]> {
     return await db.select().from(messages).orderBy(desc(messages.createdAt));
+  }
+
+  async getTopMessages(limit: number): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.isPrivate, false))
+      .orderBy(desc(messages.likesCount))
+      .limit(limit);
   }
 
   async anonymizeUserMessages(userId: string): Promise<void> {
