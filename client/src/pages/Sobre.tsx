@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart, HandHeart } from "lucide-react";
 
 function CandleIcon({ className }: { className?: string }) {
   return (
@@ -189,7 +189,7 @@ export default function Sobre() {
                 { label: "Orações enviadas", value: "cada dia mais", color: "amber" },
                 { label: "Graças celebradas", value: "toda semana", color: "blue" },
                 { label: "Comunidade", value: "sempre ativa", color: "violet" },
-                { label: "Sem julgamentos", value: "nunca", color: "emerald" },
+                { label: "Acolhimento", value: "sempre", color: "emerald" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -240,7 +240,7 @@ export default function Sobre() {
                 keyword: "comunidade de oração online",
               },
               {
-                icon: <HandHeartIcon className="w-8 h-8" />,
+                icon: <HandHeart className="w-8 h-8" />,
                 title: "Graça Recebida",
                 color: "blue",
                 bg: "bg-blue-50",
