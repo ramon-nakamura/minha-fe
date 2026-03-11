@@ -6,7 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ArrowLeft, Trash2, Shield, ShieldCheck, UserPlus, Users, X, Search,
-  HandHeart, EyeOff, Flame
+  HandHeart, EyeOff
 } from "lucide-react";
 import type { User } from "@shared/models/auth";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -14,6 +14,26 @@ import { formatDistanceToNow, format, parseISO, startOfMonth, isAfter, subMonths
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+
+function CandleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 2C11 3.5 9.5 5.5 9.5 7.2C9.5 8.8 10.6 9.8 12 9.8C13.4 9.8 14.5 8.8 14.5 7.2C14.5 5.5 13 3.5 12 2Z" fill="currentColor" stroke="none" />
+      <line x1="12" y1="9.8" x2="12" y2="11.5" />
+      <rect x="8.5" y="11.5" width="7" height="10" rx="1" />
+      <line x1="5" y1="21.5" x2="19" y2="21.5" />
+    </svg>
+  );
+}
 export default function Admin() {
   const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
@@ -185,7 +205,7 @@ export default function Admin() {
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white shadow-lg p-4 flex flex-col items-center gap-2" data-testid="stat-prayers">
             <div className="p-2.5 rounded-xl bg-amber-100">
-              <Flame className="w-5 h-5 text-amber-600" />
+              <CandleIcon className="w-5 h-5 text-amber-600" />
             </div>
             <span className="text-2xl font-display font-bold text-foreground">{stats?.totalPrayers ?? "–"}</span>
             <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Orações</span>
@@ -206,7 +226,7 @@ export default function Admin() {
           </div>
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white shadow-lg p-4 flex flex-col items-center gap-2 col-span-2 sm:col-span-1" data-testid="stat-special">
             <div className="p-2.5 rounded-xl bg-amber-50 ring-2 ring-amber-200">
-              <Flame className="w-5 h-5 text-amber-500" />
+              <CandleIcon className="w-5 h-5 text-amber-500" />
             </div>
             <span className="text-2xl font-display font-bold text-foreground">{stats?.totalSpecial ?? "–"}</span>
             <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Velas Especiais</span>
