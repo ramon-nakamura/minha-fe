@@ -169,6 +169,15 @@ export default function LandingPage() {
                 <span>Confissões Anônimas</span>
               </div>
             </div>
+
+            <div className="hidden md:block mt-6">
+              <a
+                href="/sobre"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
+              >
+                Saiba mais sobre o Minha Fé →
+              </a>
+            </div>
           </motion.div>
         </div>
 
