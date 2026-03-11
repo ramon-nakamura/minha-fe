@@ -181,6 +181,9 @@ export async function setupAuth(app: Express) {
 
       (req.session as any).userId = user.id;
 
+      // Registra último acesso
+      await authStorage.updateUser(user.id, { updatedAt: new Date() });
+
       const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (err) {
