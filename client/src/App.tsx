@@ -14,6 +14,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import Sobre from "@/pages/Sobre";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Loader2 } from "lucide-react";
 
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/admin" component={() => <ProtectedRoute component={Admin} />} />
       <Route path="/termos" component={() => <ProtectedRoute component={Terms} />} />
       <Route path="/privacidade" component={() => <ProtectedRoute component={Privacy} />} />
+      <Route path="/sobre" component={Sobre} />
       <Route component={NotFound} />
     </Switch>
   );
