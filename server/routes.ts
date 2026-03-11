@@ -61,6 +61,33 @@ Sitemap: https://minhafe.com.br/sitemap.xml`
     );
   });
 
+  // ── Preview público: top 3 mensagens por interações (sem autenticação) ──
+  app.get("/api/messages/preview", async (_req, res) => {
+    try {
+      const msgs = await storage.getTopMessages(3);
+      const withAuthors = await Promise.all(
+        msgs.map(async (m) => {
+          let authorName = undefined;
+          let authorCity = undefined;
+          if (m.authorId && m.type !== "sin") {
+            const user = await authStorage.getUser(m.authorId);
+            if (user?.firstName) {
+              const last = user.lastName
+                ? user.lastName.trim().split(/\s+/).map((p: string) => p[0].toUpperCase() + ".").join(" ")
+                : "";
+              authorName = last ? `${user.firstName} ${last}` : user.firstName;
+            }
+            authorCity = user?.city || undefined;
+          }
+          return { ...m, authorName, authorCity };
+        })
+      );
+      res.json(withAuthors);
+    } catch {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get(api.messages.list.path, async (req, res) => {
     try {
       const type = req.query.type as string | undefined;
