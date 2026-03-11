@@ -113,6 +113,52 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
+  // Algoritmo de interleaving: injeta velas especiais ativas a cada SPECIAL_SLOT mensagens comuns.
+  // Velas especiais têm visibilidade prioritária por 7 dias após a compra.
+  // A ordem das especiais é embaralhada por sessão para parecer orgânico.
+  const feedMessages = useMemo(() => {
+    const SPECIAL_SLOT = 5; // 1 especial a cada N mensagens comuns
+    const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias em ms
+    const now = Date.now();
+
+    // Separa especiais ativas (dentro da janela de 7 dias) das comuns
+    const activeSpecials = sortedMessages.filter(
+      (m) => m.isSpecial && now - new Date(m.createdAt).getTime() <= SPECIAL_WINDOW_MS
+    );
+    const commons = sortedMessages.filter(
+      (m) => !m.isSpecial || now - new Date(m.createdAt).getTime() > SPECIAL_WINDOW_MS
+    );
+
+    if (activeSpecials.length === 0) return sortedMessages;
+
+    // Embaralha as especiais com semente baseada na sessão (muda a cada reload,
+    // mas é estável durante a navegação — evita que a ordem mude no scroll)
+    const shuffled = [...activeSpecials].sort(() => Math.random() - 0.5);
+    let specialIndex = 0;
+
+    const result: FaithMessage[] = [];
+    let commonCount = 0;
+
+    for (const msg of commons) {
+      result.push(msg);
+      commonCount++;
+
+      // A cada SPECIAL_SLOT mensagens comuns, injeta uma especial (se houver disponível)
+      if (commonCount % SPECIAL_SLOT === 0 && specialIndex < shuffled.length) {
+        result.push(shuffled[specialIndex]);
+        specialIndex++;
+      }
+    }
+
+    // Especiais restantes que não couberam nos slots vão ao final
+    while (specialIndex < shuffled.length) {
+      result.push(shuffled[specialIndex]);
+      specialIndex++;
+    }
+
+    return result;
+  }, [sortedMessages]);
+
   // IntersectionObserver no sentinel
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -326,10 +372,10 @@ export default function Dashboard() {
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
             <p>Recebendo as mensagens...</p>
           </div>
-        ) : sortedMessages.length > 0 ? (
+        ) : feedMessages.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedMessages.map((message, idx) => (
+              {feedMessages.map((message, idx) => (
                 <div
                   key={message.id}
                   id={`message-${message.id}`}
@@ -345,7 +391,7 @@ export default function Dashboard() {
               {isFetchingNextPage && (
                 <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
               )}
-              {!hasNextPage && !isFetchingNextPage && sortedMessages.length > PAGE_SIZE && (
+              {!hasNextPage && !isFetchingNextPage && feedMessages.length > PAGE_SIZE && (
                 <p className="text-xs text-muted-foreground">Você chegou ao fim 🕊️</p>
               )}
             </div>
