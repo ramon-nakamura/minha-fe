@@ -40,6 +40,12 @@ Sitemap: https://minhafe.com.br/sitemap.xml`
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://minhafe.com.br/sobre</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://minhafe.com.br/terms</loc>
     <lastmod>${now}</lastmod>
     <changefreq>monthly</changefreq>
