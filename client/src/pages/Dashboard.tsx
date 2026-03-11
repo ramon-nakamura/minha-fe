@@ -113,15 +113,15 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
-  // Algoritmo de interleaving: injeta velas especiais ativas a cada SPECIAL_SLOT mensagens comuns.
+  // Algoritmo de distribuição aleatória de velas especiais.
   // Velas especiais têm visibilidade prioritária por 7 dias após a compra.
-  // A ordem das especiais é embaralhada por sessão para parecer orgânico.
+  // As posições são sorteadas uma vez por sessão (estável no scroll) garantindo
+  // espaçamento mínimo entre especiais para evitar clustering.
   const feedMessages = useMemo(() => {
-    const SPECIAL_SLOT = 4; // 1 especial a cada N mensagens comuns
     const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias em ms
+    const MIN_GAP = 3; // espaçamento mínimo entre duas especiais
     const now = Date.now();
 
-    // Separa especiais ativas (dentro da janela de 7 dias) das comuns
     const activeSpecials = sortedMessages.filter(
       (m) => m.isSpecial && now - new Date(m.createdAt).getTime() <= SPECIAL_WINDOW_MS
     );
@@ -131,29 +131,44 @@ export default function Dashboard() {
 
     if (activeSpecials.length === 0) return sortedMessages;
 
-    // Embaralha as especiais com semente baseada na sessão (muda a cada reload,
-    // mas é estável durante a navegação — evita que a ordem mude no scroll)
-    const shuffled = [...activeSpecials].sort(() => Math.random() - 0.5);
-    let specialIndex = 0;
+    // Tamanho total do feed resultante
+    const totalSize = commons.length + activeSpecials.length;
 
+    // Sorteia posições para as especiais garantindo espaçamento mínimo entre elas
+    // e que não caiam nas primeiras MIN_GAP posições (para o feed não abrir com especial)
+    const positions = new Set<number>();
+    const maxAttempts = 200;
+    let attempts = 0;
+
+    while (positions.size < activeSpecials.length && attempts < maxAttempts) {
+      attempts++;
+      const pos = MIN_GAP + Math.floor(Math.random() * (totalSize - MIN_GAP));
+      const tooClose = [...positions].some((p) => Math.abs(p - pos) < MIN_GAP);
+      if (!tooClose) positions.add(pos);
+    }
+
+    // Ordena as posições e embaralha as especiais (ordem orgânica)
+    const sortedPositions = [...positions].sort((a, b) => a - b);
+    const shuffledSpecials = [...activeSpecials].sort(() => Math.random() - 0.5);
+
+    // Monta o feed inserindo especiais nas posições sorteadas
     const result: FaithMessage[] = [];
-    let commonCount = 0;
+    let commonIdx = 0;
+    let specialIdx = 0;
 
-    for (const msg of commons) {
-      result.push(msg);
-      commonCount++;
-
-      // A cada SPECIAL_SLOT mensagens comuns, injeta uma especial (se houver disponível)
-      if (commonCount % SPECIAL_SLOT === 0 && specialIndex < shuffled.length) {
-        result.push(shuffled[specialIndex]);
-        specialIndex++;
+    for (let i = 0; i < totalSize; i++) {
+      if (specialIdx < sortedPositions.length && i === sortedPositions[specialIdx]) {
+        result.push(shuffledSpecials[specialIdx]);
+        specialIdx++;
+      } else if (commonIdx < commons.length) {
+        result.push(commons[commonIdx]);
+        commonIdx++;
       }
     }
 
-    // Especiais restantes que não couberam nos slots vão ao final
-    while (specialIndex < shuffled.length) {
-      result.push(shuffled[specialIndex]);
-      specialIndex++;
+    // Restantes (caso maxAttempts tenha limitado as posições) vão ao final
+    while (specialIdx < shuffledSpecials.length) {
+      result.push(shuffledSpecials[specialIdx++]);
     }
 
     return result;
