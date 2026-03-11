@@ -409,8 +409,7 @@ export default function LandingPage() {
           </div>
         </div>
       )}
-      </div>{/* fim flex-row */}
-      </div>{/* fim hero relativo */}
+      </div>
 
       {/* Preview de mensagens reais da comunidade */}
       {previewMessages.length > 0 && (
