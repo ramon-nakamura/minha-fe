@@ -94,6 +94,42 @@ export default function Admin() {
 
   const { isLoading: authLoading } = useAuth();
 
+  // Hooks de dados derivados — devem ficar antes dos returns condicionais (regras dos hooks)
+  const filteredUsers = useMemo(() => {
+    return users?.filter(u => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        u.email?.toLowerCase().includes(q) ||
+        u.firstName?.toLowerCase().includes(q) ||
+        u.lastName?.toLowerCase().includes(q)
+      );
+    }) ?? [];
+  }, [users, searchQuery]);
+
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * USERS_PER_PAGE;
+    return filteredUsers.slice(start, start + USERS_PER_PAGE);
+  }, [filteredUsers, currentPage]);
+
+  const acquisitionData = useMemo(() => {
+    if (!users) return [];
+    const now = new Date();
+    const months = Array.from({ length: 6 }, (_, i) => {
+      const d = subMonths(now, 5 - i);
+      return { key: format(d, "yyyy-MM"), label: format(d, "MMM", { locale: ptBR }) };
+    });
+    return months.map(({ key, label }) => ({
+      label,
+      total: users.filter(u => {
+        if (!u.createdAt) return false;
+        const d = typeof u.createdAt === "string" ? parseISO(u.createdAt) : new Date(u.createdAt);
+        return format(d, "yyyy-MM") === key;
+      }).length,
+    }));
+  }, [users]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,42 +151,6 @@ export default function Admin() {
     );
   }
 
-  const filteredUsers = useMemo(() => {
-    return users?.filter(u => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        u.email?.toLowerCase().includes(q) ||
-        u.firstName?.toLowerCase().includes(q) ||
-        u.lastName?.toLowerCase().includes(q)
-      );
-    }) ?? [];
-  }, [users, searchQuery]);
-
-  // Paginação
-  const totalPages = Math.ceil((filteredUsers?.length ?? 0) / USERS_PER_PAGE);
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * USERS_PER_PAGE;
-    return filteredUsers?.slice(start, start + USERS_PER_PAGE) ?? [];
-  }, [filteredUsers, currentPage]);
-
-  // Gráfico: aquisição de usuários por mês (últimos 6 meses)
-  const acquisitionData = useMemo(() => {
-    if (!users) return [];
-    const now = new Date();
-    const months = Array.from({ length: 6 }, (_, i) => {
-      const d = subMonths(now, 5 - i);
-      return { key: format(d, "yyyy-MM"), label: format(d, "MMM", { locale: ptBR }) };
-    });
-    return months.map(({ key, label }) => ({
-      label,
-      total: users.filter(u => {
-        if (!u.createdAt) return false;
-        const d = typeof u.createdAt === "string" ? parseISO(u.createdAt) : new Date(u.createdAt);
-        return format(d, "yyyy-MM") === key;
-      }).length,
-    }));
-  }, [users]);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
