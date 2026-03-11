@@ -16,6 +16,45 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
+  // ── SEO: robots.txt e sitemap.xml ───────────────────────────────────────
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain").send(
+      `User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://minhafe.com.br/sitemap.xml`
+    );
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    const now = new Date().toISOString().split("T")[0];
+    res.type("application/xml").send(
+      `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://minhafe.com.br/</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://minhafe.com.br/terms</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://minhafe.com.br/privacy</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>`
+    );
+  });
+
   app.get(api.messages.list.path, async (req, res) => {
     try {
       const type = req.query.type as string | undefined;
