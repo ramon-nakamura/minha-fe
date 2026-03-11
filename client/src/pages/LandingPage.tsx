@@ -117,9 +117,11 @@ export default function LandingPage() {
   const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
+    <main className="min-h-screen relative flex items-center justify-center overflow-hidden" role="main">
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-multiply"
+        role="img"
+        aria-label="Imagem de fundo decorativa"
         style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1920&q=80)' }}
       />
       
@@ -146,7 +148,8 @@ export default function LandingPage() {
               Um espaço celestial para compartilhar pedidos de oração, celebrar graças alcançadas e desabafar em total segurança e anonimato.
             </p>
 
-            <div className="hidden md:flex flex-col gap-4 mt-8">
+            <div className="hidden md:flex flex-col gap-4 mt-8" aria-label="Recursos da plataforma">
+              <h2 className="sr-only">O que você pode compartilhar</h2>
               <div className="flex items-center gap-3 text-muted-foreground">
                 <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                   <CandleIcon className="w-5 h-5 text-amber-600" />
@@ -175,7 +178,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl shadow-black/10 p-8">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl shadow-black/10 p-8" role="region" aria-label="Acesso à plataforma">
               <div className="flex rounded-2xl bg-slate-100 p-1 mb-8">
                 <button
                   data-testid="tab-login"
@@ -385,6 +388,6 @@ export default function LandingPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
