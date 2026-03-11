@@ -27,22 +27,9 @@ function CandleIcon({ className }: { className?: string }) {
   );
 }
 
-function CandleIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-      className={className}>
-      <path d="M12 2C11 3.5 9.5 5.5 9.5 7.2C9.5 8.8 10.6 9.8 12 9.8C13.4 9.8 14.5 8.8 14.5 7.2C14.5 5.5 13 3.5 12 2Z" fill="currentColor" stroke="none" />
-      <line x1="12" y1="9.8" x2="12" y2="11.5" />
-      <rect x="8.5" y="11.5" width="7" height="10" rx="1" />
-      <line x1="5" y1="21.5" x2="19" y2="21.5" />
-    </svg>
-  );
-}
 
 function cn(...inputs: (string | undefined | null | false)[]) {
-  const classes = inputs.filter(Boolean).join(" ");
-  return classes;
+  return inputs.filter(Boolean).join(" ");
 }
 
 export default function LandingPage() {
