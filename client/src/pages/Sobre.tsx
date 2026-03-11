@@ -186,10 +186,10 @@ export default function Sobre() {
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={2}
             >
               {[
-                { label: "Orações enviadas", value: "milhares", color: "amber" },
+                { label: "Orações enviadas", value: "cada dia mais", color: "amber" },
                 { label: "Graças celebradas", value: "toda semana", color: "blue" },
                 { label: "Comunidade", value: "sempre ativa", color: "violet" },
-                { label: "Anonimato", value: "garantido", color: "emerald" },
+                { label: "Sem julgamentos", value: "nunca", color: "emerald" },
               ].map((item) => (
                 <div
                   key={item.label}
