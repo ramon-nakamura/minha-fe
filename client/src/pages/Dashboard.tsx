@@ -117,7 +117,7 @@ export default function Dashboard() {
   // Velas especiais têm visibilidade prioritária por 7 dias após a compra.
   // A ordem das especiais é embaralhada por sessão para parecer orgânico.
   const feedMessages = useMemo(() => {
-    const SPECIAL_SLOT = 5; // 1 especial a cada N mensagens comuns
+    const SPECIAL_SLOT = 4; // 1 especial a cada N mensagens comuns
     const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias em ms
     const now = Date.now();
 
