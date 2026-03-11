@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
-import { HandHeart, EyeOff, Eye, EyeOff as EyeOffIcon, Loader2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { HandHeart, EyeOff, Eye, EyeOff as EyeOffIcon, Loader2, Heart, HeartHandshake } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LegalModal } from "@/components/LegalModal";
 
 
@@ -24,6 +26,25 @@ function CandleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+function CandleIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+      className={className}>
+      <path d="M12 2C11 3.5 9.5 5.5 9.5 7.2C9.5 8.8 10.6 9.8 12 9.8C13.4 9.8 14.5 8.8 14.5 7.2C14.5 5.5 13 3.5 12 2Z" fill="currentColor" stroke="none" />
+      <line x1="12" y1="9.8" x2="12" y2="11.5" />
+      <rect x="8.5" y="11.5" width="7" height="10" rx="1" />
+      <line x1="5" y1="21.5" x2="19" y2="21.5" />
+    </svg>
+  );
+}
+
+function cn(...inputs: (string | undefined | null | false)[]) {
+  const classes = inputs.filter(Boolean).join(" ");
+  return classes;
+}
+
 export default function LandingPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -59,6 +80,16 @@ export default function LandingPage() {
     }
   };
   const queryClient = useQueryClient();
+
+  const { data: previewMessages = [] } = useQuery<any[]>({
+    queryKey: ["/api/messages/preview"],
+    queryFn: async () => {
+      const res = await fetch("/api/messages/preview");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
 
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -170,7 +201,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="hidden md:block mt-6">
+            <div className="mt-6">
               <a
                 href="/sobre"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
@@ -397,6 +428,146 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+
+      {/* Preview de mensagens reais da comunidade */}
+      {previewMessages.length > 0 && (
+        <section className="w-full py-16 px-6" aria-label="Mensagens da comunidade">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center mb-10"
+            >
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Da nossa comunidade</p>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
+                Intenções que estão sendo levadas ao céu agora
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {previewMessages.map((message: any, idx: number) => {
+                const isPrayer = message.type === "prayer";
+                const isGrace = message.type === "grace";
+                const isSin = message.type === "sin";
+                const isSpecial = message.isSpecial;
+
+                const actionLabel = (() => {
+                  if (isPrayer) return message.likesCount === 0 ? "Orar" : `${message.likesCount} orando pela causa`;
+                  if (isGrace) return message.likesCount === 0 ? "Amém" : `${message.likesCount} comemorando a graça`;
+                  if (message.likesCount === 0) return "Perdoar";
+                  return `${message.likesCount} ${message.likesCount === 1 ? "perdão recebido" : "perdões recebidos"}`;
+                })();
+
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.5 + idx * 0.08 }}
+                    className={cn(
+                      "rounded-[2rem] p-6 relative overflow-hidden shadow-sm",
+                      isSpecial ? "border-0" : "bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
+                    )}
+                  >
+                    {/* Borda animada para especiais */}
+                    {isSpecial && (
+                      <>
+                        <div className="absolute inset-0 rounded-[2rem] z-0 pointer-events-none"
+                          style={{
+                            padding: "1.5px",
+                            background: "linear-gradient(var(--angle, 0deg), #f5e27a, #c8973a, #f0d060, #a87830, #f5e27a)",
+                            WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                            WebkitMaskComposite: "xor",
+                            maskComposite: "exclude",
+                            animation: "spin-border 3s linear infinite",
+                          }}
+                        />
+                        <div className="absolute inset-[1.5px] rounded-[calc(2rem-1.5px)] z-0 pointer-events-none"
+                          style={{ background: "linear-gradient(135deg, #fffdf5 0%, #fdf8e8 50%, #fffef7 100%)" }}
+                        />
+                        <style>{`@property --angle{syntax:'<angle>';initial-value:0deg;inherits:false;}@keyframes spin-border{to{--angle:360deg;}}`}</style>
+                      </>
+                    )}
+
+                    {/* Glow de fundo */}
+                    <div className={cn(
+                      "absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full pointer-events-none",
+                      isPrayer && !isSpecial && "opacity-25 bg-amber-400",
+                      isPrayer && isSpecial && "opacity-35 bg-yellow-300",
+                      isGrace && "opacity-25 bg-blue-400",
+                      isSin && "opacity-20 bg-slate-400"
+                    )} />
+
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4 relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center shadow-inner",
+                            isPrayer && "bg-amber-100/80 text-amber-600",
+                            isGrace && "bg-blue-100/80 text-blue-600",
+                            isSin && "bg-slate-200/80 text-slate-600"
+                          )}>
+                            {isSin ? <EyeOff className="w-6 h-6" /> : isPrayer ? <CandleIcon className="w-6 h-6" /> : <HandHeart className="w-6 h-6" />}
+                          </div>
+                          {!isSin && (
+                            <div className={cn(
+                              "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center shadow-sm",
+                              isPrayer && "bg-amber-100 text-amber-600",
+                              isGrace && "bg-blue-100 text-blue-600"
+                            )}>
+                              {isPrayer ? <CandleIcon className="w-3 h-3" /> : <HandHeart className="w-3 h-3" />}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground/90">
+                            {isSin ? "Anônimo" : message.authorName || "Caminhante da Fé"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: ptBR })}
+                            {!isSin && message.authorCity && (
+                              <span className="before:content-['·'] before:mx-1">{message.authorCity}</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-white/50 border-white text-muted-foreground">
+                        {isPrayer && (isSpecial ? "Oração Especial" : "Oração")}
+                        {isGrace && "Graça"}
+                        {isSin && "Confissão"}
+                      </div>
+                    </div>
+
+                    {/* Conteúdo */}
+                    <p className="text-foreground/80 text-lg leading-relaxed mb-6 font-medium relative z-10">
+                      {message.content}
+                    </p>
+
+                    {/* Contador de interações — só exibe, sem ação */}
+                    <div className="flex items-center relative z-10">
+                      <div className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium",
+                        (isPrayer || isGrace) && message.likesCount > 0 && "bg-primary/10 text-primary",
+                        (isPrayer || isGrace) && message.likesCount === 0 && "text-muted-foreground/60",
+                        isSin && message.likesCount > 0 && "bg-green-100 text-green-700",
+                        isSin && message.likesCount === 0 && "text-muted-foreground/60"
+                      )}>
+                        {isPrayer && <CandleIcon className={cn("w-4 h-4", message.likesCount > 0 && "fill-current")} />}
+                        {isGrace && <Heart className={cn("w-4 h-4", message.likesCount > 0 && "fill-current")} />}
+                        {isSin && <HeartHandshake className={cn("w-4 h-4", message.likesCount > 0 && "fill-current")} />}
+                        <span className="text-xs">{actionLabel}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
     </main>
   );
 }
