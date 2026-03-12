@@ -5,6 +5,8 @@ import { authStorage } from "./storage";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import crypto from "crypto";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
@@ -129,6 +131,94 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 
+  // ── Google OAuth ─────────────────────────────────────────────────────────
+  passport.use(new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      callbackURL: "/api/auth/google/callback",
+    },
+    async (_accessToken, _refreshToken, profile, done) => {
+      try {
+        const googleId = profile.id;
+        const email = profile.emails?.[0]?.value;
+        const firstName = profile.name?.givenName || profile.displayName?.split(" ")[0] || null;
+        const lastName = profile.name?.familyName || null;
+        const profileImageUrl = profile.photos?.[0]?.value || null;
+
+        if (!email) {
+          return done(new Error("Email não disponível na conta Google"), undefined);
+        }
+
+        // Verifica se já existe usuário com esse googleId
+        let user = await authStorage.getUserByGoogleId(googleId);
+
+        if (user) {
+          // Atualiza foto de perfil se mudou
+          if (profileImageUrl && user.profileImageUrl !== profileImageUrl) {
+            user = await authStorage.updateUser(user.id, { profileImageUrl });
+          }
+          return done(null, user);
+        }
+
+        // Verifica se existe usuário com o mesmo email (conta criada manualmente)
+        const existingByEmail = await authStorage.getUserByEmail(email);
+        if (existingByEmail) {
+          // Vincula o googleId à conta existente
+          user = await authStorage.updateUser(existingByEmail.id, {
+            googleId,
+            profileImageUrl: profileImageUrl || existingByEmail.profileImageUrl,
+          });
+          return done(null, user);
+        }
+
+        // Cria nova conta via Google
+        user = await authStorage.upsertUser({
+          email,
+          googleId,
+          firstName,
+          lastName,
+          profileImageUrl,
+          password: null,
+          consentAcceptedAt: new Date(),
+        });
+
+        return done(null, user);
+      } catch (err) {
+        return done(err as Error, undefined);
+      }
+    }
+  ));
+
+  passport.serializeUser((user: any, done) => done(null, user.id));
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      const user = await authStorage.getUser(id);
+      done(null, user);
+    } catch (err) {
+      done(err);
+    }
+  });
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Rota que inicia o fluxo Google
+  app.get("/api/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
+
+  // Callback após autenticação no Google
+  app.get("/api/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/?erro=google" }),
+    (req: any, res) => {
+      // Salva userId na sessão (padrão do sistema existente)
+      (req.session as any).userId = req.user.id;
+      res.redirect("/");
+    }
+  );
+  // ─────────────────────────────────────────────────────────────────────────
+
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { fullName, email, password, consent } = registerSchema.parse(req.body);
@@ -172,6 +262,11 @@ export async function setupAuth(app: Express) {
       const user = await authStorage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Email ou senha incorretos" });
+      }
+
+      // Conta criada via Google não tem senha
+      if (!user.password) {
+        return res.status(401).json({ message: "Esta conta foi criada com Google. Use o botão 'Continuar com Google' para entrar." });
       }
 
       const valid = await bcrypt.compare(password, user.password);
@@ -272,6 +367,10 @@ export async function setupAuth(app: Express) {
       const user = await authStorage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      if (!user.password) {
+        return res.status(400).json({ message: "Conta Google não possui senha para alterar" });
       }
 
       const valid = await bcrypt.compare(currentPassword, user.password);
