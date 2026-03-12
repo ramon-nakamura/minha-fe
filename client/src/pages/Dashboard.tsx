@@ -113,6 +113,9 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
+  // Semente aleatória gerada uma única vez por sessão — estável durante scroll e paginação
+  const sessionSeed = useRef(Math.random());
+
   // Algoritmo de distribuição aleatória de velas especiais.
   // Velas especiais têm visibilidade prioritária por 7 dias após a compra.
   // As posições são sorteadas uma vez por sessão (estável no scroll) garantindo
@@ -131,6 +134,13 @@ export default function Dashboard() {
 
     if (activeSpecials.length === 0) return sortedMessages;
 
+    // PRNG simples (mulberry32) com semente de sessão — determinístico, estável no scroll
+    let s = (sessionSeed.current * 0xffffffff) >>> 0;
+    const rand = () => {
+      s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
+      return s / 0x100000000;
+    };
+
     // Tamanho total do feed resultante
     const totalSize = commons.length + activeSpecials.length;
 
@@ -142,14 +152,14 @@ export default function Dashboard() {
 
     while (positions.size < activeSpecials.length && attempts < maxAttempts) {
       attempts++;
-      const pos = MIN_GAP + Math.floor(Math.random() * (totalSize - MIN_GAP));
+      const pos = MIN_GAP + Math.floor(rand() * (totalSize - MIN_GAP));
       const tooClose = [...positions].some((p) => Math.abs(p - pos) < MIN_GAP);
       if (!tooClose) positions.add(pos);
     }
 
     // Ordena as posições e embaralha as especiais (ordem orgânica)
     const sortedPositions = [...positions].sort((a, b) => a - b);
-    const shuffledSpecials = [...activeSpecials].sort(() => Math.random() - 0.5);
+    const shuffledSpecials = [...activeSpecials].sort(() => rand() - 0.5);
 
     // Monta o feed inserindo especiais nas posições sorteadas
     const result: FaithMessage[] = [];
