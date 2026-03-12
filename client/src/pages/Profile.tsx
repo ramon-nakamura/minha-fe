@@ -1,9 +1,9 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages, useLikeMessage, usePardonMessage } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, HeartHandshake, HandHeart, EyeOff, Heart } from "lucide-react";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, HeartHandshake, HandHeart, EyeOff, Heart, Download } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +48,123 @@ export default function Profile() {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [showReflection, setShowReflection] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [generatingImages, setGeneratingImages] = useState(false);
+  const [shareImages, setShareImages] = useState<{ label: string; dataUrl: string; filename: string }[]>([]);
+
+  const generateShareImage = useCallback(async (
+    bgSrc: string,
+    width: number,
+    height: number,
+    label: string,
+    filename: string,
+    verse: { text: string; reference: string }
+  ): Promise<{ label: string; dataUrl: string; filename: string }> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        // Draw background
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const padding = width * 0.1;
+        const maxTextWidth = width - padding * 2;
+
+        // Verse text styling
+        const isWide = width > height;
+        const isStory = height > width;
+        const baseFontSize = isWide ? Math.floor(width * 0.034) : isStory ? Math.floor(width * 0.072) : Math.floor(width * 0.058);
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Draw quote mark
+        ctx.font = `bold ${baseFontSize * 2.5}px Georgia, serif`;
+        ctx.fillStyle = "rgba(180, 140, 60, 0.3)";
+        ctx.fillText('"', width / 2 - maxTextWidth / 2 + baseFontSize, height * 0.35);
+
+        // Draw verse text with word wrap
+        ctx.font = `${baseFontSize}px Georgia, 'Times New Roman', serif`;
+        ctx.fillStyle = "rgba(60, 50, 30, 0.88)";
+
+        const words = verse.text.split(" ");
+        const lines: string[] = [];
+        let currentLine = "";
+
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxTextWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+
+        const lineHeight = baseFontSize * 1.55;
+        const totalTextHeight = lines.length * lineHeight;
+        let startY = height / 2 - totalTextHeight / 2 - baseFontSize * 1.2;
+
+        // Clamp startY
+        if (startY < height * 0.25) startY = height * 0.25;
+
+        lines.forEach((line, i) => {
+          ctx.fillText(line, width / 2, startY + i * lineHeight);
+        });
+
+        // Reference
+        const refY = startY + lines.length * lineHeight + baseFontSize * 1.0;
+        ctx.font = `bold ${Math.floor(baseFontSize * 0.7)}px 'Arial', sans-serif`;
+        ctx.fillStyle = "rgba(160, 120, 40, 0.85)";
+        ctx.letterSpacing = "3px";
+        ctx.fillText(verse.reference.toUpperCase(), width / 2, refY);
+
+        // Divider line
+        const dividerY = refY + baseFontSize * 1.2;
+        ctx.beginPath();
+        ctx.moveTo(width / 2 - 60, dividerY);
+        ctx.lineTo(width / 2 + 60, dividerY);
+        ctx.strokeStyle = "rgba(180, 140, 60, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Site watermark
+        const siteY = dividerY + baseFontSize * 1.0;
+        ctx.font = `${Math.floor(baseFontSize * 0.62)}px 'Arial', sans-serif`;
+        ctx.fillStyle = "rgba(120, 100, 60, 0.7)";
+        ctx.fillText("minhafe.com.br", width / 2, siteY);
+
+        resolve({ label, dataUrl: canvas.toDataURL("image/jpeg", 0.95), filename });
+      };
+      img.src = bgSrc;
+    });
+  }, []);
+
+  const handleOpenShare = useCallback(async () => {
+    setShowShare(true);
+    setGeneratingImages(true);
+    setShareImages([]);
+
+    const formats = [
+      { src: "/bg-story.jpg", width: 1080, height: 1920, label: "Story (9:16)", filename: "versiculo-story.jpg" },
+      { src: "/bg-square.jpg", width: 1080, height: 1080, label: "Quadrado (1:1)", filename: "versiculo-quadrado.jpg" },
+      { src: "/bg-wide.jpg", width: 1920, height: 1080, label: "Paisagem (16:9)", filename: "versiculo-paisagem.jpg" },
+    ];
+
+    const results = await Promise.all(
+      formats.map(f => generateShareImage(f.src, f.width, f.height, f.label, f.filename, verseOfDay))
+    );
+
+    setShareImages(results);
+    setGeneratingImages(false);
+  }, [verseOfDay, generateShareImage]);
 
   const verses = [
     {
@@ -285,6 +402,13 @@ export default function Profile() {
             >
               <Sparkles className="w-4 h-4 text-primary" />
               Refletir
+            </button>
+            <button 
+              onClick={handleOpenShare}
+              className="px-6 py-2.5 rounded-full bg-white border border-black/5 text-slate-700 font-bold text-sm flex items-center gap-2 hover:bg-primary/5 transition-all shadow-sm"
+            >
+              <Share2 className="w-4 h-4 text-primary" />
+              Compartilhar
             </button>
           </div>
         </section>
@@ -645,6 +769,54 @@ export default function Profile() {
               <p className="text-slate-600 leading-relaxed font-medium">{verseOfDay.reflection}</p>
               <button onClick={() => setShowReflection(false)} className="w-full mt-4 py-3 rounded-2xl bg-primary text-white font-bold">Amém</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showShare && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] p-6 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowShare(false)}
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-50 text-slate-400"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-display font-bold text-slate-900">Compartilhar Versículo</h3>
+              <p className="text-sm text-slate-500 mt-1">Escolha o formato ideal para compartilhar</p>
+            </div>
+
+            {generatingImages ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-sm text-slate-500">Gerando imagens...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {shareImages.map((img) => (
+                  <div key={img.label} className="flex flex-col gap-3">
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
+                      <img
+                        src={img.dataUrl}
+                        alt={img.label}
+                        className="w-full object-contain"
+                      />
+                    </div>
+                    <p className="text-xs font-bold text-center text-slate-500 uppercase tracking-wider">{img.label}</p>
+                    <a
+                      href={img.dataUrl}
+                      download={img.filename}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all"
+                    >
+                      <Download className="w-4 h-4" />
+                      Baixar
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
