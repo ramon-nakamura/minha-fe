@@ -37,6 +37,129 @@ function CandleIcon({ className }: { className?: string }) {
   );
 }
 
+const FORMAT_META = [
+  { key: 0, label: "Story", sublabel: "9:16", aspectClass: "aspect-[9/16]" },
+  { key: 1, label: "Quadrado", sublabel: "1:1", aspectClass: "aspect-square" },
+  { key: 2, label: "Paisagem", sublabel: "16:9", aspectClass: "aspect-video" },
+];
+
+function ShareModal({
+  shareImages,
+  generatingImages,
+  verseOfDay,
+  onClose,
+}: {
+  shareImages: { label: string; dataUrl: string; filename: string }[];
+  generatingImages: boolean;
+  verseOfDay: { text: string; reference: string };
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState(0);
+  const current = shareImages[selected];
+
+  const handleShare = async () => {
+    if (!current) return;
+    const res = await fetch(current.dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], current.filename, { type: "image/jpeg" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "Versículo do Dia",
+        text: `"${verseOfDay.text}" — ${verseOfDay.reference} | minhafe.com.br`,
+      });
+    } else {
+      const a = document.createElement("a");
+      a.href = current.dataUrl;
+      a.download = current.filename;
+      a.click();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden">
+
+        {/* Handle bar (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4">
+          <div>
+            <h3 className="text-base font-display font-bold text-slate-900">Compartilhar Versículo</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Escolha o formato</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {generatingImages ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+            <p className="text-sm text-slate-400">Gerando imagens...</p>
+          </div>
+        ) : (
+          <>
+            {/* Format selector */}
+            <div className="flex gap-2 px-6 pb-4">
+              {FORMAT_META.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setSelected(f.key)}
+                  className={cn(
+                    "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition-all",
+                    selected === f.key
+                      ? "border-primary bg-primary/5"
+                      : "border-slate-100 bg-slate-50 hover:border-slate-200"
+                  )}
+                >
+                  {/* Mini aspect ratio thumbnail */}
+                  <div className={cn(
+                    "rounded border",
+                    selected === f.key ? "border-primary/40 bg-primary/10" : "border-slate-300 bg-white",
+                    f.key === 0 ? "w-5 h-9" : f.key === 1 ? "w-7 h-7" : "w-9 h-5"
+                  )} />
+                  <span className={cn("text-[11px] font-bold", selected === f.key ? "text-primary" : "text-slate-500")}>
+                    {f.label}
+                  </span>
+                  <span className="text-[10px] text-slate-400">{f.sublabel}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Preview */}
+            {current && (
+              <div className="px-6 pb-4">
+                <div className={cn(
+                  "w-full rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50",
+                  FORMAT_META[selected].aspectClass
+                )}>
+                  <img src={current.dataUrl} alt={current.label} className="w-full h-full object-cover" />
+                </div>
+              </div>
+            )}
+
+            {/* Share button */}
+            <div className="px-6 pb-8">
+              <button
+                onClick={handleShare}
+                className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20"
+              >
+                <Share2 className="w-4 h-4" />
+                Compartilhar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -798,70 +921,12 @@ export default function Profile() {
       )}
 
       {showShare && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] p-6 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowShare(false)}
-              className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-50 text-slate-400"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-display font-bold text-slate-900">Compartilhar Versículo</h3>
-              <p className="text-sm text-slate-500 mt-1">Escolha o formato ideal para compartilhar</p>
-            </div>
-
-            {generatingImages ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-sm text-slate-500">Gerando imagens...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {shareImages.map((img) => (
-                  <div key={img.label} className="flex flex-col gap-3">
-                    <div className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50">
-                      <img
-                        src={img.dataUrl}
-                        alt={img.label}
-                        className="w-full object-contain"
-                      />
-                    </div>
-                    <p className="text-xs font-bold text-center text-slate-500 uppercase tracking-wider">{img.label}</p>
-                    <button
-                      onClick={async () => {
-                        // Convert dataUrl to Blob
-                        const res = await fetch(img.dataUrl);
-                        const blob = await res.blob();
-                        const file = new File([blob], img.filename, { type: "image/jpeg" });
-
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          // Native share sheet (smartphones)
-                          await navigator.share({
-                            files: [file],
-                            title: "Versículo do Dia",
-                            text: `"${verseOfDay.text}" — ${verseOfDay.reference} | minhafe.com.br`,
-                          });
-                        } else {
-                          // Fallback: download
-                          const a = document.createElement("a");
-                          a.href = img.dataUrl;
-                          a.download = img.filename;
-                          a.click();
-                        }
-                      }}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Compartilhar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <ShareModal
+          shareImages={shareImages}
+          generatingImages={generatingImages}
+          verseOfDay={verseOfDay}
+          onClose={() => setShowShare(false)}
+        />
       )}
     </div>
   );
