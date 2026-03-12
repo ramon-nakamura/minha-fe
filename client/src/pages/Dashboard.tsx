@@ -113,18 +113,15 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
-  // Mapa estável de id → posição relativa entre comuns, calculado uma vez por conjunto de especiais.
-  // Chave: IDs das especiais ativas (ordenados). Valor: { posição entre comuns, ordem das especiais }.
-  // Nunca recalcula quando apenas novos comuns chegam — só quando o conjunto de especiais muda.
-  const specialsLayoutRef = useRef<{
-    key: string;
-    insertAfterCommon: number[]; // após qual índice comum inserir cada especial
-    order: number[];             // ordem (embaralhada) das especiais pelo índice em activeSpecials
-  } | null>(null);
+  // Semente gerada uma vez por sessão — muda no reload, estável no scroll/paginação
+  const sessionSeed = useRef(Math.random());
 
+  // Algoritmo de slot com jitter: injeta velas especiais ativas a cada N mensagens comuns,
+  // onde N é sorteado entre SLOT_MIN e SLOT_MAX a cada inserção usando PRNG com semente de sessão.
   const feedMessages = useMemo(() => {
     const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-    const MIN_GAP = 3; // mínimo de comuns entre duas especiais
+    const SLOT_MIN = 3;
+    const SLOT_MAX = 5;
     const now = Date.now();
 
     const activeSpecials = sortedMessages.filter(
@@ -136,63 +133,38 @@ export default function Dashboard() {
 
     if (activeSpecials.length === 0) return sortedMessages;
 
-    // Chave que representa o conjunto atual de especiais ativas
-    const layoutKey = activeSpecials.map((m) => m.id).sort().join(",");
+    // PRNG mulberry32 — determinístico a partir da semente de sessão
+    let s = (sessionSeed.current * 0xffffffff) >>> 0;
+    const rand = () => {
+      s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
+      return s / 0x100000000;
+    };
 
-    // Só recalcula o layout se o conjunto de especiais mudou
-    if (specialsLayoutRef.current?.key !== layoutKey) {
-      const n = activeSpecials.length;
+    // Embaralha as especiais uma vez por sessão
+    const shuffled = [...activeSpecials].sort(() => rand() - 0.5);
+    let specialIndex = 0;
 
-      // PRNG mulberry32 com semente aleatória gerada uma única vez para este conjunto
-      let s = (Math.random() * 0xffffffff) >>> 0;
-      const rand = () => {
-        s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
-        return s / 0x100000000;
-      };
+    const result: FaithMessage[] = [];
+    let commonCount = 0;
+    // Sorteia o primeiro slot para não começar sempre no mesmo ponto
+    let nextSlot = SLOT_MIN + Math.floor(rand() * (SLOT_MAX - SLOT_MIN + 1));
 
-      // Sorteia posições "após qual comum inserir" — valores entre MIN_GAP e um máximo razoável
-      // Trabalha em coordenadas de comuns (não do feed total) — imune ao crescimento do feed
-      const MAX_COMMON_POS = 80; // janela de distribuição entre os primeiros ~80 comuns
-      const positions = new Set<number>();
-      let attempts = 0;
-      while (positions.size < n && attempts < 300) {
-        attempts++;
-        const pos = MIN_GAP + Math.floor(rand() * (MAX_COMMON_POS - MIN_GAP));
-        const tooClose = [...positions].some((p) => Math.abs(p - pos) < MIN_GAP);
-        if (!tooClose) positions.add(pos);
+    for (const msg of commons) {
+      result.push(msg);
+      commonCount++;
+
+      if (commonCount >= nextSlot && specialIndex < shuffled.length) {
+        result.push(shuffled[specialIndex]);
+        specialIndex++;
+        commonCount = 0;
+        // Sorteia próximo slot
+        nextSlot = SLOT_MIN + Math.floor(rand() * (SLOT_MAX - SLOT_MIN + 1));
       }
-      const insertAfterCommon = [...positions].sort((a, b) => a - b);
-
-      // Ordem embaralhada das especiais
-      const order = Array.from({ length: n }, (_, i) => i).sort(() => rand() - 0.5);
-
-      specialsLayoutRef.current = { key: layoutKey, insertAfterCommon, order };
     }
 
-    const { insertAfterCommon, order } = specialsLayoutRef.current!;
-    const shuffledSpecials = order.map((i) => activeSpecials[i]);
-
-    // Monta o feed intercalando especiais nas posições fixas entre os comuns
-    const result: FaithMessage[] = [];
-    let commonIdx = 0;
-    let specialIdx = 0;
-
-    while (commonIdx < commons.length || specialIdx < shuffledSpecials.length) {
-      // Inserir especial se chegamos na posição certa (em termos de comuns já inseridos)
-      if (
-        specialIdx < shuffledSpecials.length &&
-        commonIdx >= insertAfterCommon[specialIdx]
-      ) {
-        result.push(shuffledSpecials[specialIdx]);
-        specialIdx++;
-      } else if (commonIdx < commons.length) {
-        result.push(commons[commonIdx]);
-        commonIdx++;
-      } else {
-        // Especiais restantes sem posição disponível vão ao final
-        result.push(shuffledSpecials[specialIdx]);
-        specialIdx++;
-      }
+    // Especiais restantes vão ao final
+    while (specialIndex < shuffled.length) {
+      result.push(shuffled[specialIndex++]);
     }
 
     return result;
