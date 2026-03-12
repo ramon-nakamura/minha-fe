@@ -38,9 +38,9 @@ function CandleIcon({ className }: { className?: string }) {
 }
 
 const FORMAT_META = [
-  { key: 0, label: "Story", sublabel: "9:16", aspectClass: "aspect-[9/16]" },
-  { key: 1, label: "Quadrado", sublabel: "1:1", aspectClass: "aspect-square" },
-  { key: 2, label: "Paisagem", sublabel: "16:9", aspectClass: "aspect-video" },
+  { key: 0, label: "Story", sublabel: "9:16" },
+  { key: 1, label: "Quadrado", sublabel: "1:1" },
+  { key: 2, label: "Paisagem", sublabel: "16:9" },
 ];
 
 function ShareModal({
@@ -79,15 +79,15 @@ function ShareModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-      <div className="bg-white w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden">
+      <div className="bg-white w-full sm:max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: "85svh" }}>
 
         {/* Handle bar (mobile) */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+        <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
           <div className="w-10 h-1 rounded-full bg-slate-200" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
           <div>
             <h3 className="text-base font-display font-bold text-slate-900">Compartilhar Versículo</h3>
             <p className="text-xs text-slate-400 mt-0.5">Escolha o formato</p>
@@ -105,7 +105,7 @@ function ShareModal({
         ) : (
           <>
             {/* Format selector */}
-            <div className="flex gap-2 px-6 pb-4">
+            <div className="flex gap-2 px-6 pb-4 shrink-0">
               {FORMAT_META.map((f) => (
                 <button
                   key={f.key}
@@ -117,7 +117,6 @@ function ShareModal({
                       : "border-slate-100 bg-slate-50 hover:border-slate-200"
                   )}
                 >
-                  {/* Mini aspect ratio thumbnail */}
                   <div className={cn(
                     "rounded border",
                     selected === f.key ? "border-primary/40 bg-primary/10" : "border-slate-300 bg-white",
@@ -131,20 +130,19 @@ function ShareModal({
               ))}
             </div>
 
-            {/* Preview */}
+            {/* Preview — fixed pixel height, never overflows */}
             {current && (
-              <div className="px-6 pb-4">
-                <div className={cn(
-                  "w-full rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50",
-                  FORMAT_META[selected].aspectClass
-                )}>
-                  <img src={current.dataUrl} alt={current.label} className="w-full h-full object-cover" />
-                </div>
+              <div className="px-6 pb-4 flex items-center justify-center" style={{ height: "200px" }}>
+                <img
+                  src={current.dataUrl}
+                  alt={current.label}
+                  style={{ maxHeight: "200px", maxWidth: "100%", borderRadius: "1rem", objectFit: "contain" }}
+                />
               </div>
             )}
 
             {/* Share button */}
-            <div className="px-6 pb-8">
+            <div className="px-6 pb-8 shrink-0">
               <button
                 onClick={handleShare}
                 className="w-full py-4 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20"
