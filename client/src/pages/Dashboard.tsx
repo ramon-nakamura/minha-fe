@@ -113,16 +113,18 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
-  // Semente aleatória gerada uma única vez por sessão — estável durante scroll e paginação
-  const sessionSeed = useRef(Math.random());
+  // Mapa estável de id → posição relativa entre comuns, calculado uma vez por conjunto de especiais.
+  // Chave: IDs das especiais ativas (ordenados). Valor: { posição entre comuns, ordem das especiais }.
+  // Nunca recalcula quando apenas novos comuns chegam — só quando o conjunto de especiais muda.
+  const specialsLayoutRef = useRef<{
+    key: string;
+    insertAfterCommon: number[]; // após qual índice comum inserir cada especial
+    order: number[];             // ordem (embaralhada) das especiais pelo índice em activeSpecials
+  } | null>(null);
 
-  // Algoritmo de distribuição aleatória de velas especiais.
-  // Velas especiais têm visibilidade prioritária por 7 dias após a compra.
-  // As posições são sorteadas uma vez por sessão (estável no scroll) garantindo
-  // espaçamento mínimo entre especiais para evitar clustering.
   const feedMessages = useMemo(() => {
-    const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias em ms
-    const MIN_GAP = 3; // espaçamento mínimo entre duas especiais
+    const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+    const MIN_GAP = 3; // mínimo de comuns entre duas especiais
     const now = Date.now();
 
     const activeSpecials = sortedMessages.filter(
@@ -134,51 +136,63 @@ export default function Dashboard() {
 
     if (activeSpecials.length === 0) return sortedMessages;
 
-    // PRNG simples (mulberry32) com semente de sessão — determinístico, estável no scroll
-    let s = (sessionSeed.current * 0xffffffff) >>> 0;
-    const rand = () => {
-      s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
-      return s / 0x100000000;
-    };
+    // Chave que representa o conjunto atual de especiais ativas
+    const layoutKey = activeSpecials.map((m) => m.id).sort().join(",");
 
-    // Tamanho total do feed resultante
-    const totalSize = commons.length + activeSpecials.length;
+    // Só recalcula o layout se o conjunto de especiais mudou
+    if (specialsLayoutRef.current?.key !== layoutKey) {
+      const n = activeSpecials.length;
 
-    // Sorteia posições para as especiais garantindo espaçamento mínimo entre elas
-    // e que não caiam nas primeiras MIN_GAP posições (para o feed não abrir com especial)
-    const positions = new Set<number>();
-    const maxAttempts = 200;
-    let attempts = 0;
+      // PRNG mulberry32 com semente aleatória gerada uma única vez para este conjunto
+      let s = (Math.random() * 0xffffffff) >>> 0;
+      const rand = () => {
+        s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
+        return s / 0x100000000;
+      };
 
-    while (positions.size < activeSpecials.length && attempts < maxAttempts) {
-      attempts++;
-      const pos = MIN_GAP + Math.floor(rand() * (totalSize - MIN_GAP));
-      const tooClose = [...positions].some((p) => Math.abs(p - pos) < MIN_GAP);
-      if (!tooClose) positions.add(pos);
+      // Sorteia posições "após qual comum inserir" — valores entre MIN_GAP e um máximo razoável
+      // Trabalha em coordenadas de comuns (não do feed total) — imune ao crescimento do feed
+      const MAX_COMMON_POS = 80; // janela de distribuição entre os primeiros ~80 comuns
+      const positions = new Set<number>();
+      let attempts = 0;
+      while (positions.size < n && attempts < 300) {
+        attempts++;
+        const pos = MIN_GAP + Math.floor(rand() * (MAX_COMMON_POS - MIN_GAP));
+        const tooClose = [...positions].some((p) => Math.abs(p - pos) < MIN_GAP);
+        if (!tooClose) positions.add(pos);
+      }
+      const insertAfterCommon = [...positions].sort((a, b) => a - b);
+
+      // Ordem embaralhada das especiais
+      const order = Array.from({ length: n }, (_, i) => i).sort(() => rand() - 0.5);
+
+      specialsLayoutRef.current = { key: layoutKey, insertAfterCommon, order };
     }
 
-    // Ordena as posições e embaralha as especiais (ordem orgânica)
-    const sortedPositions = [...positions].sort((a, b) => a - b);
-    const shuffledSpecials = [...activeSpecials].sort(() => rand() - 0.5);
+    const { insertAfterCommon, order } = specialsLayoutRef.current!;
+    const shuffledSpecials = order.map((i) => activeSpecials[i]);
 
-    // Monta o feed inserindo especiais nas posições sorteadas
+    // Monta o feed intercalando especiais nas posições fixas entre os comuns
     const result: FaithMessage[] = [];
     let commonIdx = 0;
     let specialIdx = 0;
 
-    for (let i = 0; i < totalSize; i++) {
-      if (specialIdx < sortedPositions.length && i === sortedPositions[specialIdx]) {
+    while (commonIdx < commons.length || specialIdx < shuffledSpecials.length) {
+      // Inserir especial se chegamos na posição certa (em termos de comuns já inseridos)
+      if (
+        specialIdx < shuffledSpecials.length &&
+        commonIdx >= insertAfterCommon[specialIdx]
+      ) {
         result.push(shuffledSpecials[specialIdx]);
         specialIdx++;
       } else if (commonIdx < commons.length) {
         result.push(commons[commonIdx]);
         commonIdx++;
+      } else {
+        // Especiais restantes sem posição disponível vão ao final
+        result.push(shuffledSpecials[specialIdx]);
+        specialIdx++;
       }
-    }
-
-    // Restantes (caso maxAttempts tenha limitado as posições) vão ao final
-    while (specialIdx < shuffledSpecials.length) {
-      result.push(shuffledSpecials[specialIdx++]);
     }
 
     return result;
