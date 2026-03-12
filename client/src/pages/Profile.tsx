@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessages, useDeleteMessage, useDeleteMessages, useLikeMessage, usePardonMessage } from "@/hooks/use-messages";
-import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, HeartHandshake, HandHeart, EyeOff, Heart, Download } from "lucide-react";
+import { Quote, Share2, Sparkles, X, Loader2, ArrowLeft, Trash2, CheckSquare, Square, BookPlus, MessageSquare, HeartHandshake, HandHeart, EyeOff, Heart } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -829,14 +829,33 @@ export default function Profile() {
                       />
                     </div>
                     <p className="text-xs font-bold text-center text-slate-500 uppercase tracking-wider">{img.label}</p>
-                    <a
-                      href={img.dataUrl}
-                      download={img.filename}
+                    <button
+                      onClick={async () => {
+                        // Convert dataUrl to Blob
+                        const res = await fetch(img.dataUrl);
+                        const blob = await res.blob();
+                        const file = new File([blob], img.filename, { type: "image/jpeg" });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                          // Native share sheet (smartphones)
+                          await navigator.share({
+                            files: [file],
+                            title: "Versículo do Dia",
+                            text: `"${verseOfDay.text}" — ${verseOfDay.reference} | minhafe.com.br`,
+                          });
+                        } else {
+                          // Fallback: download
+                          const a = document.createElement("a");
+                          a.href = img.dataUrl;
+                          a.download = img.filename;
+                          a.click();
+                        }
+                      }}
                       className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-white transition-all"
                     >
-                      <Download className="w-4 h-4" />
-                      Baixar
-                    </a>
+                      <Share2 className="w-4 h-4" />
+                      Compartilhar
+                    </button>
                   </div>
                 ))}
               </div>
