@@ -120,7 +120,7 @@ export default function Dashboard() {
   // onde N é sorteado entre SLOT_MIN e SLOT_MAX a cada inserção usando PRNG com semente de sessão.
   const feedMessages = useMemo(() => {
     const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-    const SLOT_MIN = 3;
+    const SLOT_MIN = 1;
     const SLOT_MAX = 5;
     const now = Date.now();
 
