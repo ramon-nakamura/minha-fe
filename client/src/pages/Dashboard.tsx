@@ -120,7 +120,7 @@ export default function Dashboard() {
   // onde N é sorteado entre SLOT_MIN e SLOT_MAX a cada inserção usando PRNG com semente de sessão.
   const feedMessages = useMemo(() => {
     const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-    const SLOT_MIN = 1;
+    const SLOT_MIN = 0;
     const SLOT_MAX = 5;
     const now = Date.now();
 
@@ -146,8 +146,9 @@ export default function Dashboard() {
 
     const result: FaithMessage[] = [];
     let commonCount = 0;
-    // Sorteia o primeiro slot para não começar sempre no mesmo ponto
-    let nextSlot = SLOT_MIN + Math.floor(rand() * (SLOT_MAX - SLOT_MIN + 1));
+
+    // Primeira especial aparece na posição 1 ou 2 (após 0 ou 1 comum) — sorteado por sessão
+    let nextSlot = Math.floor(rand() * 2); // 0 ou 1
 
     for (const msg of commons) {
       result.push(msg);
