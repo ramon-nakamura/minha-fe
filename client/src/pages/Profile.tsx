@@ -210,6 +210,73 @@ export default function Profile() {
     return verses[idx];
   }, []);
 
+  const drawVerseOnCanvas = useCallback((
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    verse: { text: string; reference: string }
+  ) => {
+    const padding = width * 0.1;
+    const maxTextWidth = width - padding * 2;
+
+    const isWide = width > height;
+    const isStory = height > width;
+    const baseFontSize = isWide ? Math.floor(width * 0.034) : isStory ? Math.floor(width * 0.072) : Math.floor(width * 0.058);
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = `bold ${baseFontSize * 2.5}px Georgia, serif`;
+    ctx.fillStyle = "rgba(180, 140, 60, 0.3)";
+    ctx.fillText('"', width / 2 - maxTextWidth / 2 + baseFontSize, height * 0.35);
+
+    ctx.font = `${baseFontSize}px Georgia, 'Times New Roman', serif`;
+    ctx.fillStyle = "rgba(60, 50, 30, 0.88)";
+
+    const words = verse.text.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxTextWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    const lineHeight = baseFontSize * 1.55;
+    const totalTextHeight = lines.length * lineHeight;
+    let startY = height / 2 - totalTextHeight / 2 - baseFontSize * 1.2;
+    if (startY < height * 0.25) startY = height * 0.25;
+
+    lines.forEach((line, i) => {
+      ctx.fillText(line, width / 2, startY + i * lineHeight);
+    });
+
+    const refY = startY + lines.length * lineHeight + baseFontSize * 1.0;
+    ctx.font = `bold ${Math.floor(baseFontSize * 0.7)}px 'Arial', sans-serif`;
+    ctx.fillStyle = "rgba(160, 120, 40, 0.85)";
+    ctx.fillText(verse.reference.toUpperCase(), width / 2, refY);
+
+    const dividerY = refY + baseFontSize * 1.2;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 60, dividerY);
+    ctx.lineTo(width / 2 + 60, dividerY);
+    ctx.strokeStyle = "rgba(180, 140, 60, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const siteY = dividerY + baseFontSize * 1.0;
+    ctx.font = `${Math.floor(baseFontSize * 0.62)}px 'Arial', sans-serif`;
+    ctx.fillStyle = "rgba(120, 100, 60, 0.7)";
+    ctx.fillText("minhafe.com.br", width / 2, siteY);
+  }, []);
+
   const generateShareImage = useCallback(async (
     bgSrc: string,
     width: number,
@@ -218,82 +285,31 @@ export default function Profile() {
     filename: string,
     verse: { text: string; reference: string }
   ): Promise<{ label: string; dataUrl: string; filename: string }> => {
-    return new Promise((resolve) => {
+    // Fetch the image as blob to avoid any CORS/taint issues
+    const response = await fetch(bgSrc);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d")!;
 
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.onload = () => {
         ctx.drawImage(img, 0, 0, width, height);
-
-        const padding = width * 0.1;
-        const maxTextWidth = width - padding * 2;
-
-        const isWide = width > height;
-        const isStory = height > width;
-        const baseFontSize = isWide ? Math.floor(width * 0.034) : isStory ? Math.floor(width * 0.072) : Math.floor(width * 0.058);
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        ctx.font = `bold ${baseFontSize * 2.5}px Georgia, serif`;
-        ctx.fillStyle = "rgba(180, 140, 60, 0.3)";
-        ctx.fillText('"', width / 2 - maxTextWidth / 2 + baseFontSize, height * 0.35);
-
-        ctx.font = `${baseFontSize}px Georgia, 'Times New Roman', serif`;
-        ctx.fillStyle = "rgba(60, 50, 30, 0.88)";
-
-        const words = verse.text.split(" ");
-        const lines: string[] = [];
-        let currentLine = "";
-
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          const metrics = ctx.measureText(testLine);
-          if (metrics.width > maxTextWidth && currentLine) {
-            lines.push(currentLine);
-            currentLine = word;
-          } else {
-            currentLine = testLine;
-          }
-        }
-        if (currentLine) lines.push(currentLine);
-
-        const lineHeight = baseFontSize * 1.55;
-        const totalTextHeight = lines.length * lineHeight;
-        let startY = height / 2 - totalTextHeight / 2 - baseFontSize * 1.2;
-        if (startY < height * 0.25) startY = height * 0.25;
-
-        lines.forEach((line, i) => {
-          ctx.fillText(line, width / 2, startY + i * lineHeight);
-        });
-
-        const refY = startY + lines.length * lineHeight + baseFontSize * 1.0;
-        ctx.font = `bold ${Math.floor(baseFontSize * 0.7)}px 'Arial', sans-serif`;
-        ctx.fillStyle = "rgba(160, 120, 40, 0.85)";
-        ctx.fillText(verse.reference.toUpperCase(), width / 2, refY);
-
-        const dividerY = refY + baseFontSize * 1.2;
-        ctx.beginPath();
-        ctx.moveTo(width / 2 - 60, dividerY);
-        ctx.lineTo(width / 2 + 60, dividerY);
-        ctx.strokeStyle = "rgba(180, 140, 60, 0.4)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        const siteY = dividerY + baseFontSize * 1.0;
-        ctx.font = `${Math.floor(baseFontSize * 0.62)}px 'Arial', sans-serif`;
-        ctx.fillStyle = "rgba(120, 100, 60, 0.7)";
-        ctx.fillText("minhafe.com.br", width / 2, siteY);
-
+        drawVerseOnCanvas(ctx, width, height, verse);
+        URL.revokeObjectURL(blobUrl);
         resolve({ label, dataUrl: canvas.toDataURL("image/jpeg", 0.95), filename });
       };
-      img.src = bgSrc;
+      img.onerror = (e) => {
+        URL.revokeObjectURL(blobUrl);
+        reject(e);
+      };
+      img.src = blobUrl;
     });
-  }, []);
+  }, [drawVerseOnCanvas]);
 
   const handleOpenShare = useCallback(async () => {
     setShowShare(true);
