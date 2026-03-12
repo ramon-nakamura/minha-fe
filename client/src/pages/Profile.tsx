@@ -210,37 +210,83 @@ export default function Profile() {
     return verses[idx];
   }, []);
 
-  const drawVerseOnCanvas = useCallback((
-    ctx: CanvasRenderingContext2D,
+  const generateShareImage = useCallback((
     width: number,
     height: number,
+    label: string,
+    filename: string,
     verse: { text: string; reference: string }
-  ) => {
-    const padding = width * 0.1;
-    const maxTextWidth = width - padding * 2;
+  ): { label: string; dataUrl: string; filename: string } => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d")!;
 
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, width, height);
+    bg.addColorStop(0, "#f5f0e8");
+    bg.addColorStop(0.5, "#fdfaf4");
+    bg.addColorStop(1, "#f0ebe0");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Soft glow corners
+    const drawGlow = (x: number, y: number, r: number) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, "rgba(255, 240, 180, 0.55)");
+      g.addColorStop(0.5, "rgba(255, 230, 150, 0.18)");
+      g.addColorStop(1, "rgba(255, 240, 180, 0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+    };
+    const glowR = Math.min(width, height) * 0.55;
+    drawGlow(0, 0, glowR);
+    drawGlow(width, 0, glowR);
+    drawGlow(0, height, glowR);
+    drawGlow(width, height, glowR);
+
+    // Thin gold border lines
+    ctx.strokeStyle = "rgba(200, 170, 90, 0.25)";
+    ctx.lineWidth = 1.5;
+    const m = width * 0.06;
+    ctx.strokeRect(m, m, width - m * 2, height - m * 2);
+
+    // Decorative corner accents
+    const accentLen = Math.min(width, height) * 0.06;
+    const corners = [[m, m], [width - m, m], [m, height - m], [width - m, height - m]] as [number, number][];
+    ctx.strokeStyle = "rgba(200, 160, 70, 0.5)";
+    ctx.lineWidth = 2;
+    corners.forEach(([cx, cy]) => {
+      const sx = cx === m ? 1 : -1;
+      const sy = cy === m ? 1 : -1;
+      ctx.beginPath(); ctx.moveTo(cx, cy + sy * accentLen); ctx.lineTo(cx, cy); ctx.lineTo(cx + sx * accentLen, cy); ctx.stroke();
+    });
+
+    // Text layout
+    const padding = width * 0.12;
+    const maxTextWidth = width - padding * 2;
     const isWide = width > height;
     const isStory = height > width;
-    const baseFontSize = isWide ? Math.floor(width * 0.034) : isStory ? Math.floor(width * 0.072) : Math.floor(width * 0.058);
+    const baseFontSize = isWide ? Math.floor(width * 0.034) : isStory ? Math.floor(width * 0.068) : Math.floor(width * 0.054);
 
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = `bold ${baseFontSize * 2.5}px Georgia, serif`;
-    ctx.fillStyle = "rgba(180, 140, 60, 0.3)";
-    ctx.fillText('"', width / 2 - maxTextWidth / 2 + baseFontSize, height * 0.35);
+    // Opening quote mark
+    ctx.font = `italic ${baseFontSize * 3}px Georgia, serif`;
+    ctx.fillStyle = "rgba(190, 155, 70, 0.22)";
+    ctx.fillText("\u201C", width / 2, height * 0.30);
 
-    ctx.font = `${baseFontSize}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "rgba(60, 50, 30, 0.88)";
+    // Verse text with word wrap
+    ctx.font = `italic ${baseFontSize}px Georgia, 'Times New Roman', serif`;
+    ctx.fillStyle = "rgba(55, 42, 20, 0.85)";
 
     const words = verse.text.split(" ");
     const lines: string[] = [];
     let currentLine = "";
-
     for (const word of words) {
       const testLine = currentLine ? `${currentLine} ${word}` : word;
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxTextWidth && currentLine) {
+      if (ctx.measureText(testLine).width > maxTextWidth && currentLine) {
         lines.push(currentLine);
         currentLine = word;
       } else {
@@ -249,85 +295,57 @@ export default function Profile() {
     }
     if (currentLine) lines.push(currentLine);
 
-    const lineHeight = baseFontSize * 1.55;
+    const lineHeight = baseFontSize * 1.6;
     const totalTextHeight = lines.length * lineHeight;
-    let startY = height / 2 - totalTextHeight / 2 - baseFontSize * 1.2;
-    if (startY < height * 0.25) startY = height * 0.25;
+    let startY = height / 2 - totalTextHeight / 2 - baseFontSize * 0.5;
+    if (startY < height * 0.30) startY = height * 0.30;
 
-    lines.forEach((line, i) => {
-      ctx.fillText(line, width / 2, startY + i * lineHeight);
-    });
+    lines.forEach((line, i) => ctx.fillText(line, width / 2, startY + i * lineHeight));
 
-    const refY = startY + lines.length * lineHeight + baseFontSize * 1.0;
-    ctx.font = `bold ${Math.floor(baseFontSize * 0.7)}px 'Arial', sans-serif`;
-    ctx.fillStyle = "rgba(160, 120, 40, 0.85)";
+    // Reference
+    const refY = startY + lines.length * lineHeight + baseFontSize * 1.1;
+    ctx.font = `bold ${Math.floor(baseFontSize * 0.65)}px Arial, sans-serif`;
+    ctx.fillStyle = "rgba(170, 130, 45, 0.9)";
     ctx.fillText(verse.reference.toUpperCase(), width / 2, refY);
 
-    const dividerY = refY + baseFontSize * 1.2;
+    // Divider
+    const divW = Math.min(120, width * 0.15);
+    const divY = refY + baseFontSize * 1.3;
     ctx.beginPath();
-    ctx.moveTo(width / 2 - 60, dividerY);
-    ctx.lineTo(width / 2 + 60, dividerY);
-    ctx.strokeStyle = "rgba(180, 140, 60, 0.4)";
+    ctx.moveTo(width / 2 - divW, divY);
+    ctx.lineTo(width / 2 + divW, divY);
+    ctx.strokeStyle = "rgba(190, 155, 70, 0.45)";
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    const siteY = dividerY + baseFontSize * 1.0;
-    ctx.font = `${Math.floor(baseFontSize * 0.62)}px 'Arial', sans-serif`;
-    ctx.fillStyle = "rgba(120, 100, 60, 0.7)";
-    ctx.fillText("minhafe.com.br", width / 2, siteY);
+    // Site watermark
+    ctx.font = `${Math.floor(baseFontSize * 0.58)}px Arial, sans-serif`;
+    ctx.fillStyle = "rgba(140, 110, 50, 0.65)";
+    ctx.fillText("minhafe.com.br", width / 2, divY + baseFontSize * 1.1);
+
+    return { label, dataUrl: canvas.toDataURL("image/jpeg", 0.95), filename };
   }, []);
 
-  const generateShareImage = useCallback(async (
-    bgSrc: string,
-    width: number,
-    height: number,
-    label: string,
-    filename: string,
-    verse: { text: string; reference: string }
-  ): Promise<{ label: string; dataUrl: string; filename: string }> => {
-    // Fetch the image as blob to avoid any CORS/taint issues
-    const response = await fetch(bgSrc);
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d")!;
-
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, width, height);
-        drawVerseOnCanvas(ctx, width, height, verse);
-        URL.revokeObjectURL(blobUrl);
-        resolve({ label, dataUrl: canvas.toDataURL("image/jpeg", 0.95), filename });
-      };
-      img.onerror = (e) => {
-        URL.revokeObjectURL(blobUrl);
-        reject(e);
-      };
-      img.src = blobUrl;
-    });
-  }, [drawVerseOnCanvas]);
-
-  const handleOpenShare = useCallback(async () => {
+  const handleOpenShare = useCallback(() => {
     setShowShare(true);
     setGeneratingImages(true);
     setShareImages([]);
 
-    const formats = [
-      { src: "/bg-story.jpg", width: 1080, height: 1920, label: "Story (9:16)", filename: "versiculo-story.jpg" },
-      { src: "/bg-square.jpg", width: 1080, height: 1080, label: "Quadrado (1:1)", filename: "versiculo-quadrado.jpg" },
-      { src: "/bg-wide.jpg", width: 1920, height: 1080, label: "Paisagem (16:9)", filename: "versiculo-paisagem.jpg" },
-    ];
+    // Use setTimeout to allow the modal/loader to render before the canvas work
+    setTimeout(() => {
+      const formats = [
+        { width: 1080, height: 1920, label: "Story (9:16)", filename: "versiculo-story.jpg" },
+        { width: 1080, height: 1080, label: "Quadrado (1:1)", filename: "versiculo-quadrado.jpg" },
+        { width: 1920, height: 1080, label: "Paisagem (16:9)", filename: "versiculo-paisagem.jpg" },
+      ];
 
-    const results = await Promise.all(
-      formats.map(f => generateShareImage(f.src, f.width, f.height, f.label, f.filename, verseOfDay))
-    );
+      const results = formats.map(f =>
+        generateShareImage(f.width, f.height, f.label, f.filename, verseOfDay)
+      );
 
-    setShareImages(results);
-    setGeneratingImages(false);
+      setShareImages(results);
+      setGeneratingImages(false);
+    }, 50);
   }, [verseOfDay, generateShareImage]);
 
   const toggleSelect = (id: number) => {
