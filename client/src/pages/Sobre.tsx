@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, Heart, HandHeart } from "lucide-react";
+import { ArrowRight, Heart, HandHeart, BookOpen } from "lucide-react";
 
 function CandleIcon({ className }: { className?: string }) {
   return (
@@ -279,6 +279,91 @@ export default function Sobre() {
                 <p className="text-muted-foreground leading-relaxed">{item.description}</p>
               </motion.article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Minha Jornada */}
+      <section
+        className="py-24 px-6 bg-gradient-to-b from-white/0 via-violet-50/30 to-white/0"
+        aria-labelledby="jornada-heading"
+      >
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="text-center mb-16"
+            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+          >
+            <h2
+              id="jornada-heading"
+              className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4"
+            >
+              Minha Jornada
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Um espaço só seu — para andar com a Palavra.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {/* Texto explicativo */}
+            <motion.div
+              className="space-y-6 text-lg text-muted-foreground leading-relaxed"
+              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={1}
+            >
+              <p>
+                Além de compartilhar suas intenções com a comunidade, o Minha Fé reserva um
+                canto especial para a sua jornada pessoal. Na seção <strong className="text-foreground">Minha Jornada</strong>,
+                você encontra um versículo da Bíblia cuidadosamente selecionado e uma reflexão
+                para acompanhar o seu dia — como uma bússola espiritual que orienta em silêncio.
+              </p>
+              <p>
+                A fé se fortalece quando alimentada com consistência. Por isso, essa área foi
+                pensada para ser um momento de pausa, de respiro, de escuta interior — um
+                encontro com a Palavra no ritmo da sua própria vida.
+              </p>
+              <p>
+                Esta área está crescendo e, em breve, trará ainda mais recursos para
+                enriquecer a sua caminhada espiritual de forma pessoal e contínua.
+              </p>
+            </motion.div>
+
+            {/* Card ilustrativo */}
+            <motion.div
+              className="relative bg-white/80 border border-violet-100 rounded-3xl p-8 shadow-sm flex flex-col gap-6"
+              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={2}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-tr-3xl bg-gradient-to-br from-violet-100/60 via-amber-50/40 to-transparent pointer-events-none" />
+
+              <div className="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+                <BookOpen className="w-7 h-7" />
+              </div>
+
+              <div>
+                <p className="font-display text-lg font-bold text-foreground mb-1">Versículo diário</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Uma passagem bíblica para iluminar o seu dia, acompanhada de uma breve
+                  reflexão que convida ao silêncio e à meditação.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 bg-violet-50/70 rounded-2xl p-4">
+                <span className="text-violet-400 text-xl mt-0.5" aria-hidden="true">✦</span>
+                <p className="text-sm text-violet-700/80 italic leading-relaxed">
+                  "Porque sou eu que conheço os planos que tenho para vocês…"
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {["Versículo", "Reflexão", "Jornada pessoal"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] font-semibold text-violet-500 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
