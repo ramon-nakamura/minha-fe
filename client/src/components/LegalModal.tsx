@@ -279,7 +279,7 @@ function PrivacyContent() {
           <li>Revogação do consentimento</li>
         </ul>
         <p className="text-foreground/80 leading-relaxed">
-          Solicitações podem ser feitas pelo e-mail: <span className="font-medium">contato@minhafe.app</span>
+          Solicitações podem ser feitas pelo e-mail: <span className="font-medium">contato@minhafe.com.br</span>
         </p>
       </section>
 
@@ -321,7 +321,7 @@ function PrivacyContent() {
           Para dúvidas, solicitações ou exercício de direitos relacionados à proteção de dados:
         </p>
         <p className="text-foreground/80 leading-relaxed">
-          E-mail: <span className="font-medium">contato@minhafe.app</span><br />
+          E-mail: <span className="font-medium">contato@minhafe.com.br</span><br />
           Responsável pelo tratamento: Minha Fé
         </p>
       </section>
