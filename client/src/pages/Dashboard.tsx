@@ -113,63 +113,7 @@ export default function Dashboard() {
     return allMessages;
   }, [allMessages, sortBy]);
 
-  // Semente gerada uma vez por sessão — muda no reload, estável no scroll/paginação
-  const sessionSeed = useRef(Math.random());
 
-  // Algoritmo de slot com jitter: injeta velas especiais ativas a cada N mensagens comuns,
-  // onde N é sorteado entre SLOT_MIN e SLOT_MAX a cada inserção usando PRNG com semente de sessão.
-  const feedMessages = useMemo(() => {
-    const SPECIAL_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-    const SLOT_MIN = 0;
-    const SLOT_MAX = 5;
-    const now = Date.now();
-
-    const activeSpecials = sortedMessages.filter(
-      (m) => m.isSpecial && now - new Date(m.createdAt).getTime() <= SPECIAL_WINDOW_MS
-    );
-    const commons = sortedMessages.filter(
-      (m) => !m.isSpecial || now - new Date(m.createdAt).getTime() > SPECIAL_WINDOW_MS
-    );
-
-    if (activeSpecials.length === 0) return sortedMessages;
-
-    // PRNG mulberry32 — determinístico a partir da semente de sessão
-    let s = (sessionSeed.current * 0xffffffff) >>> 0;
-    const rand = () => {
-      s = (Math.imul(s ^ (s >>> 15), s | 1) ^ ((s ^ (s >>> 7)) * (s | 61))) >>> 0;
-      return s / 0x100000000;
-    };
-
-    // Embaralha as especiais uma vez por sessão
-    const shuffled = [...activeSpecials].sort(() => rand() - 0.5);
-    let specialIndex = 0;
-
-    const result: FaithMessage[] = [];
-    let commonCount = 0;
-
-    // Primeira especial aparece na posição 1 ou 2 (após 0 ou 1 comum) — sorteado por sessão
-    let nextSlot = Math.floor(rand() * 2); // 0 ou 1
-
-    for (const msg of commons) {
-      result.push(msg);
-      commonCount++;
-
-      if (commonCount >= nextSlot && specialIndex < shuffled.length) {
-        result.push(shuffled[specialIndex]);
-        specialIndex++;
-        commonCount = 0;
-        // Sorteia próximo slot
-        nextSlot = SLOT_MIN + Math.floor(rand() * (SLOT_MAX - SLOT_MIN + 1));
-      }
-    }
-
-    // Especiais restantes vão ao final
-    while (specialIndex < shuffled.length) {
-      result.push(shuffled[specialIndex++]);
-    }
-
-    return result;
-  }, [sortedMessages]);
 
   // IntersectionObserver no sentinel
   useEffect(() => {
@@ -384,10 +328,10 @@ export default function Dashboard() {
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
             <p>Recebendo as mensagens...</p>
           </div>
-        ) : feedMessages.length > 0 ? (
+        ) : sortedMessages.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {feedMessages.map((message, idx) => (
+              {sortedMessages.map((message, idx) => (
                 <div
                   key={message.id}
                   id={`message-${message.id}`}
@@ -403,7 +347,7 @@ export default function Dashboard() {
               {isFetchingNextPage && (
                 <Loader2 className="w-6 h-6 animate-spin text-primary/50" />
               )}
-              {!hasNextPage && !isFetchingNextPage && feedMessages.length > PAGE_SIZE && (
+              {!hasNextPage && !isFetchingNextPage && sortedMessages.length > PAGE_SIZE && (
                 <p className="text-xs text-muted-foreground">Você chegou ao fim 🕊️</p>
               )}
             </div>
