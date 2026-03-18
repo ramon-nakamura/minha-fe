@@ -448,7 +448,7 @@ export default function LandingPage() {
               </h2>
             </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: '1fr' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {previewMessages.map((message: any, idx: number) => {
                 const isPrayer = message.type === "prayer";
                 const isGrace = message.type === "grace";
