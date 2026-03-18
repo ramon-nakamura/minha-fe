@@ -64,7 +64,7 @@ Sitemap: https://minhafe.com.br/sitemap.xml`
   // ── Preview público: top 3 mensagens por interações (sem autenticação) ──
   app.get("/api/messages/preview", async (_req, res) => {
     try {
-      const msgs = await storage.getTopMessages(3);
+      const msgs = await storage.getTopMessages(6);
       const withAuthors = await Promise.all(
         msgs.map(async (m) => {
           let authorName = undefined;
