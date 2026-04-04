@@ -50,20 +50,20 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
           delay: Math.min(index * 0.05, 0.3),
           ease: "easeOut",
         }}
-        className="relative group w-full h-full min-h-[300px]"
+        className="relative group w-full"
         style={{ transformStyle: "preserve-3d" }}
       >
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
-          transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-          className="relative w-full h-full"
+          transition={{ duration: 0.8, type: "spring", stiffness: 60, damping: 15 }}
+          className="relative w-full grid"
           style={{ transformStyle: "preserve-3d" }}
         >
           {/*******************************************
            * FRONT SIDE (VERSE)
            *******************************************/}
           <div
-            className="absolute inset-0 w-full rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
+            className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
               background: "linear-gradient(135deg, #fdfaf4 0%, #f5ecd8 100%)",
@@ -129,7 +129,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
            * BACK SIDE (REFLECTION)
            *******************************************/}
           <div
-            className="absolute inset-0 w-full rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
+            className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
