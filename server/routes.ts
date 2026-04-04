@@ -8,6 +8,7 @@ import { authStorage } from "./replit_integrations/auth/storage";
 import { stripe, SPECIAL_CANDLE_PRICE, SPECIAL_CANDLE_CURRENCY } from "./stripe";
 
 import { seedDatabase } from "./seed";
+import { verses } from "@shared/verses";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -94,6 +95,33 @@ Sitemap: https://minhafe.com.br/sitemap.xml`
       const authorId = req.query.authorId as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+
+      // --- Assegurar Versículo Diário (Lazy) ---
+      const now = new Date();
+      const brtNow = new Date(now.getTime() - 3 * 3600000);
+      const currentHourBRT = brtNow.getUTCHours();
+      
+      if (currentHourBRT >= 9 && (!type || type === "all" || type === "verse")) {
+        const startOfDayBRT_in_UTC = new Date(Date.UTC(brtNow.getUTCFullYear(), brtNow.getUTCMonth(), brtNow.getUTCDate(), 3, 0, 0)); 
+        const endOfDayBRT_in_UTC = new Date(Date.UTC(brtNow.getUTCFullYear(), brtNow.getUTCMonth(), brtNow.getUTCDate() + 1, 2, 59, 59));
+        
+        const dailyVerse = await storage.getDailyVerseForDate(startOfDayBRT_in_UTC, endOfDayBRT_in_UTC);
+        if (!dailyVerse) {
+          const daysSinceEpoch = Math.floor(brtNow.getTime() / 86400000);
+          const verseIndex = daysSinceEpoch % verses.length;
+          const verseOfDay = verses[verseIndex];
+          
+          await storage.createMessage({
+            type: "verse",
+            content: verseOfDay.text,
+            isPrivate: false,
+            // @ts-ignore workaround for extra parameters
+            reference: verseOfDay.reference,
+            reflection: verseOfDay.reflection,
+          });
+        }
+      }
+      // -----------------------------------------
 
       const msgs = await storage.getMessages(type, authorId, limit, offset);
 

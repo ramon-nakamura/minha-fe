@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { FaithMessage } from "@/hooks/use-messages";
 import { useLikeMessage, usePardonMessage, useDeleteMessage } from "@/hooks/use-messages";
+import { VerseFeedCard } from "./VerseFeedCard";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { clsx } from "clsx";
@@ -104,6 +105,10 @@ interface FloatingBubbleProps {
 }
 
 export function FloatingBubble({ message, index, isAdmin, currentUserId }: FloatingBubbleProps) {
+  if (message.type === 'verse') {
+    return <VerseFeedCard message={message} index={index} />;
+  }
+
   const likeMutation = useLikeMessage();
   const pardonMutation = usePardonMessage();
   const deleteMutation = useDeleteMessage();

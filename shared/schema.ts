@@ -14,11 +14,13 @@ export const messages = pgTable("messages", {
   isPardoned: boolean("is_pardoned").default(false).notNull(),
   isSpecial: boolean("is_special").default(false).notNull(),
   isPrivate: boolean("is_private").default(false).notNull(),
+  reference: text("reference"), // used for verse
+  reflection: text("reflection"), // used for verse
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).extend({
-  content: z.string().min(1, "A mensagem não pode estar vazia").max(400, "A mensagem deve ter no máximo 400 caracteres")
+  content: z.string().min(1, "A mensagem não pode estar vazia")
 }).omit({ 
   id: true,
   likesCount: true,

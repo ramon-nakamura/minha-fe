@@ -10,7 +10,7 @@ import {
   type InsertNotification,
   type Payment,
 } from "@shared/schema";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   getMessages(type?: string, authorId?: string, limit?: number, offset?: number): Promise<Message[]>;
@@ -28,6 +28,7 @@ export interface IStorage {
   getAllMessages(): Promise<Message[]>;
   getTopMessages(limit: number): Promise<Message[]>;
   anonymizeUserMessages(userId: string): Promise<void>;
+  getDailyVerseForDate(startDate: Date, endDate: Date): Promise<Message | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +104,21 @@ export class DatabaseStorage implements IStorage {
 
   async anonymizeUserMessages(userId: string): Promise<void> {
     await db.update(messages).set({}).where(eq(messages.authorId, userId));
+  }
+
+  async getDailyVerseForDate(startDate: Date, endDate: Date): Promise<Message | undefined> {
+    const [msg] = await db
+      .select()
+      .from(messages)
+      .where(
+        and(
+          eq(messages.type, "verse"),
+          gte(messages.createdAt, startDate),
+          lte(messages.createdAt, endDate)
+        )
+      )
+      .limit(1);
+    return msg;
   }
 
   async createPayment(data: { userId: string; messageId: number | null; stripeSessionId: string; amount: number; status?: string }): Promise<Payment> {
