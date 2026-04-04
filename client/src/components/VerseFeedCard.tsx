@@ -116,7 +116,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
                   onClick={() => setFlipped(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-amber-700/60 hover:bg-amber-100 hover:text-amber-700 transition-colors text-xs font-medium"
                 >
-                  <Lightbulb className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                   Refletir
                 </button>
                 <button
