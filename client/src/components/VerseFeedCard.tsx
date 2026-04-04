@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Share2, Sparkles, MoveHorizontal } from "lucide-react";
+import { Heart, Share2, Sparkles, Lightbulb, Undo2 } from "lucide-react";
 import type { FaithMessage } from "@/hooks/use-messages";
 import { useLikeMessage } from "@/hooks/use-messages";
 import { ShareVerseModal } from "./ShareVerseModal";
@@ -66,6 +66,8 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              backgroundColor: "#fdfaf4",
               background: "linear-gradient(135deg, #fdfaf4 0%, #f5ecd8 100%)",
             }}
           >
@@ -112,7 +114,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
                   onClick={() => setFlipped(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-amber-700/60 hover:bg-amber-100 hover:text-amber-700 transition-colors text-xs font-medium"
                 >
-                  <MoveHorizontal className="w-4 h-4" />
+                  <Lightbulb className="w-4 h-4" />
                   Refletir
                 </button>
                 <button
@@ -132,7 +134,9 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
+              backgroundColor: "#fefefd",
               background: "linear-gradient(135deg, #fefefd 0%, #f6f7fb 100%)",
             }}
           >
@@ -179,6 +183,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
                 onClick={() => setFlipped(false)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors text-xs font-medium"
               >
+                <Undo2 className="w-4 h-4" />
                 Voltar
               </button>
             </div>
