@@ -16,6 +16,9 @@ function cnLocal(...inputs: ClassValue[]) {
 
 interface VerseFeedCardProps {
   message: FaithMessage;
+  index: number;
+}
+
 const VERSE_THEMES = [
   {
     solidBg: "#fcf9f2",
