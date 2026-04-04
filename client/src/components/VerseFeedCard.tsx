@@ -69,8 +69,10 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             style={{
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
-              backgroundColor: "#fdfaf4",
-              background: "linear-gradient(135deg, #fdfaf4 0%, #f5ecd8 100%)",
+              backgroundColor: "#fcf9f2",
+              backgroundImage: "url('/verse-card-bg.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
             {/* Celestial Decorative Background Elements */}
