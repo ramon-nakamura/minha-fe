@@ -62,7 +62,9 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
           {/*******************************************
            * FRONT SIDE (VERSE)
            *******************************************/}
-          <div
+          <motion.div
+            animate={{ opacity: flipped ? 0 : 1 }}
+            transition={{ duration: 0.1, delay: flipped ? 0 : 0.35 }}
             className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
@@ -72,13 +74,13 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             }}
           >
             {/* Celestial Decorative Background Elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/40 rounded-full blur-3xl pointer-events-none -translate-x-4 translate-y-4" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/20 rounded-full blur-2xl pointer-events-none translate-x-4 -translate-y-4" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/40 rounded-full blur-3xl pointer-events-none -translate-x-4 translate-y-4" style={{ transform: "translateZ(-1px)" }} />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/20 rounded-full blur-2xl pointer-events-none translate-x-4 -translate-y-4" style={{ transform: "translateZ(-1px)" }} />
             
             {/* Fine Gold border decoration */}
-            <div className="absolute inset-2 border border-amber-500/20 rounded-[1.5rem] pointer-events-none" />
+            <div className="absolute inset-2 border border-amber-500/20 rounded-[1.5rem] pointer-events-none" style={{ transform: "translateZ(-1px)" }} />
 
-            <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-center">
+            <div className="flex flex-col items-center justify-center flex-1 text-center" style={{ transform: "translateZ(1px)" }}>
               <Sparkles className="w-6 h-6 text-amber-500/50 mb-4" />
               <p className="text-foreground/80 text-xl md:text-2xl font-serif italic leading-relaxed mb-4">
                 "{text}"
@@ -89,7 +91,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             </div>
 
             {/* Footer Interactions (Front) */}
-            <div className="relative z-10 mt-6 pt-4 border-t border-amber-900/10 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-amber-900/10 flex items-center justify-between" style={{ transform: "translateZ(1px)" }}>
               <button
                 onClick={handleAmen}
                 disabled={likeMutation.isPending}
@@ -125,12 +127,14 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/*******************************************
            * BACK SIDE (REFLECTION)
            *******************************************/}
-          <div
+          <motion.div
+            animate={{ opacity: flipped ? 1 : 0 }}
+            transition={{ duration: 0.1, delay: flipped ? 0.35 : 0 }}
             className="col-start-1 row-start-1 w-full min-h-[280px] rounded-[2rem] p-6 flex flex-col justify-between shadow-md border-0 pointer-events-auto"
             style={{
               backfaceVisibility: "hidden",
@@ -141,10 +145,10 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             }}
           >
             {/* Back Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-24 h-24 bg-blue-200/30 rounded-full blur-3xl pointer-events-none translate-x-4 translate-y-4" />
-            <div className="absolute inset-2 border border-slate-900/10 rounded-[1.5rem] pointer-events-none" />
+            <div className="absolute top-0 left-0 w-24 h-24 bg-blue-200/30 rounded-full blur-3xl pointer-events-none translate-x-4 translate-y-4" style={{ transform: "translateZ(-1px)" }} />
+            <div className="absolute inset-2 border border-slate-900/10 rounded-[1.5rem] pointer-events-none" style={{ transform: "translateZ(-1px)" }} />
 
-            <div className="relative z-10 flex flex-col flex-1">
+            <div className="flex flex-col flex-1" style={{ transform: "translateZ(1px)" }}>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold tracking-widest uppercase text-slate-400">
                   Reflexão
@@ -159,7 +163,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
             </div>
 
             {/* Footer Interactions (Back) */}
-            <div className="relative z-10 mt-6 pt-4 border-t border-slate-900/10 flex items-center justify-between">
+            <div className="mt-6 pt-4 border-t border-slate-900/10 flex items-center justify-between" style={{ transform: "translateZ(1px)" }}>
                <button
                 onClick={handleAmen}
                 disabled={likeMutation.isPending}
@@ -187,7 +191,7 @@ export function VerseFeedCard({ message, index }: VerseFeedCardProps) {
                 Voltar
               </button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </motion.div>
 
